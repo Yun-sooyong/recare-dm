@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>환자 재입원 위험도 예측</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --main-navy: #1A1940;
+            --point-blue: #5F65D9;
+            --sub-lavender: #9AA3D9;
+            --dark-gray: #323440;
+            --light-bg: #F0F0F2;
+            --white: #ffffff;
+            --border: #d9dce8;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px;
+            background: var(--light-bg);
+            font-family: Arial, sans-serif;
+            color: var(--dark-gray);
+        }
+
+        .page-wrap {
+            max-width: 1220px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--main-navy), var(--point-blue));
+            color: var(--white);
+            padding: 30px 36px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 14px 28px rgba(26, 25, 64, 0.24);
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.92;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
+            margin-bottom: 22px;
+            border: 1px solid rgba(154, 163, 217, 0.28);
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 19px;
+            color: var(--main-navy);
+        }
+
+        .section-title {
+            margin: 26px 0 13px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--point-blue);
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 17px 19px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 7px;
+            color: var(--main-navy);
+        }
+
+        input,
+        select {
+            height: 43px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 12px;
+            font-size: 14px;
+            background: #fbfbfd;
+            color: var(--dark-gray);
+        }
+
+        input::placeholder {
+            color: #9ca3af;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--point-blue);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(95, 101, 217, 0.16);
+        }
+
+        .hint {
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .button-row {
+            margin-top: 28px;
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 11px;
+            padding: 13px 21px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.18s ease;
+        }
+
+        .btn-primary {
+            background: var(--point-blue);
+            color: var(--white);
+            box-shadow: 0 8px 16px rgba(95, 101, 217, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--main-navy);
+        }
+
+        .btn-secondary {
+            background: rgba(154, 163, 217, 0.24);
+            color: var(--main-navy);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(154, 163, 217, 0.42);
+        }
+
+        .csv-box {
+            border: 2px dashed var(--sub-lavender);
+            background: rgba(154, 163, 217, 0.16);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .csv-box:hover {
+            background: rgba(154, 163, 217, 0.24);
+            border-color: var(--point-blue);
+        }
+
+        .csv-box.drag-over {
+            background: rgba(95, 101, 217, 0.18);
+            border-color: var(--point-blue);
+            box-shadow: 0 0 0 4px rgba(95, 101, 217, 0.12);
+        }
+
+        .csv-box strong {
+            display: block;
+            color: var(--main-navy);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .csv-box p {
+            font-size: 13px;
+            color: var(--dark-gray);
+            line-height: 1.5;
+            margin: 0 0 15px;
+        }
+
+        .drop-message {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 26px 16px;
+            margin: 15px 0;
+            border: 1px solid rgba(154, 163, 217, 0.5);
+        }
+
+        .upload-icon {
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            background: var(--point-blue);
+            color: white;
+            font-size: 25px;
+            line-height: 46px;
+            font-weight: 900;
+        }
+
+        .upload-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--main-navy);
+            margin-bottom: 5px;
+        }
+
+        .upload-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .selected-file {
+            margin: 14px 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--main-navy);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .selected-file span {
+            color: var(--sub-lavender);
+        }
+
+        .csv-example {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fbfbfd;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--dark-gray);
+            line-height: 1.7;
+            border-left: 4px solid var(--point-blue);
+        }
+
+        .csv-example strong {
+            color: var(--main-navy);
+        }
+
+        .guide-box {
+            background: #fbfbfd;
+            padding: 16px;
+            border-radius: 13px;
+            margin-bottom: 13px;
+            border-left: 5px solid var(--point-blue);
+        }
+
+        .guide-box strong {
+            display: block;
+            font-size: 14px;
+            color: var(--main-navy);
+            margin-bottom: 6px;
+        }
+
+        .guide-box span {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .mini-result-preview {
+            background: var(--main-navy);
+            color: var(--white);
+            border-radius: 16px;
+            padding: 22px;
+            text-align: center;
+            margin-top: 14px;
+        }
+
+        .mini-result-preview .percent {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--sub-lavender);
+            margin: 10px 0 4px;
+        }
+
+        .mini-result-preview .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--point-blue);
+            color: var(--white);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .error {
+            background: #fff1f2;
+            color: #991b1b;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 800;
+            border-left: 5px solid #ef4444;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 20px;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+    <div class="hero">
+        <h1>환자 재입원 위험도 예측</h1>
+        <p>환자 정보를 직접 입력하거나 CSV 파일을 업로드하여 30일 이내 재입원 가능성을 예측합니다.</p>
+    </div>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="layout">
+
+        <div class="card">
+            <h2>환자 정보 입력</h2>
+
+            <form action="{% url 'prediction:single_predict' %}" method="post">
+                {% csrf_token %}
+
+                <div class="section-title">기본 정보</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>환자명</label>
+                        <input type="text" name="patient_name" placeholder="예: 김민수">
+                        <div class="hint">환자 구분을 위한 이름을 입력합니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>나이</label>
+                        <input type="number" name="age" placeholder="예: 65">
+                        <div class="hint">입력한 나이는 모델 연령대로 자동 변환됩니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>성별</label>
+                        <select name="gender">
+                            <option value="Male">남성</option>
+                            <option value="Female">여성</option>
+                        </select>
+                        <div class="hint">환자의 성별을 선택합니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>인종</label>
+                        <select name="race">
+                            <option value="Caucasian">Caucasian</option>
+                            <option value="AfricanAmerican">African American</option>
+                            <option value="Asian">Asian</option>
+                            <option value="Hispanic">Hispanic</option>
+                            <option value="Other">Other</option>
+                            <option value="missing">Unknown</option>
+                        </select>
+                        <div class="hint">모델 학습 데이터 기준 인종 범주입니다.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">입원 및 진료 정보</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>입원 기간</label>
+                        <input type="number" name="time_in_hospital" placeholder="예: 7" required>
+                        <div class="hint">입원한 총 일수를 입력합니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>검사 횟수</label>
+                        <input type="number" name="num_lab_procedures" placeholder="예: 45" required>
+                        <div class="hint">입원 중 시행한 검사 횟수입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>시술 횟수</label>
+                        <input type="number" name="num_procedures" placeholder="예: 1" required>
+                        <div class="hint">입원 중 받은 시술 횟수입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>투약 수</label>
+                        <input type="number" name="num_medications" placeholder="예: 20" required>
+                        <div class="hint">처방된 약물 개수입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>진단 개수</label>
+                        <input type="number" name="number_diagnoses" placeholder="예: 6" required>
+                        <div class="hint">기록된 진단 개수입니다.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">최근 의료 이용 이력</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>최근 외래 방문 횟수</label>
+                        <input type="number" name="number_outpatient" placeholder="예: 2" required>
+                        <div class="hint">최근 외래 방문 횟수입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>최근 응급 방문 횟수</label>
+                        <input type="number" name="number_emergency" placeholder="예: 0" required>
+                        <div class="hint">최근 응급실 방문 횟수입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>최근 입원 횟수</label>
+                        <input type="number" name="number_inpatient" placeholder="예: 1" required>
+                        <div class="hint">최근 입원 이력 횟수입니다.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">당뇨 치료 정보</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>인슐린 처방</label>
+                        <select name="insulin">
+                            <option value="No">없음</option>
+                            <option value="Steady">유지</option>
+                            <option value="Up">증량</option>
+                            <option value="Down">감량</option>
+                        </select>
+                        <div class="hint">입원 중 인슐린 처방 상태입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>당뇨약 처방 여부</label>
+                        <select name="diabetesMed">
+                            <option value="Yes">처방 있음</option>
+                            <option value="No">처방 없음</option>
+                        </select>
+                        <div class="hint">당뇨 관련 약물 처방 여부입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>당뇨약 변경 여부</label>
+                        <select name="change">
+                            <option value="No">변경 없음</option>
+                            <option value="Ch">변경 있음</option>
+                        </select>
+                        <div class="hint">입원 중 당뇨약 변경 여부입니다.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>메트포르민 처방</label>
+                        <select name="metformin">
+                            <option value="No">없음</option>
+                            <option value="Steady">유지</option>
+                            <option value="Up">증량</option>
+                            <option value="Down">감량</option>
+                        </select>
+                        <div class="hint">대표적인 당뇨약 처방 상태입니다.</div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button type="submit" class="btn-primary">재입원 위험도 예측</button>
+                    <button type="reset" class="btn-secondary">입력 초기화</button>
+                </div>
+            </form>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2>CSV 대량 예측</h2>
+
+                <form action="{% url 'prediction:bulk_predict' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="csv-box" id="drop-area">
+                        <strong>CSV 파일 업로드</strong>
+                        <p>CSV 파일을 클릭해서 선택하거나 이 영역에 끌어다 놓으세요.</p>
+
+                        <input type="file" id="csv-file-input" name="csv_file" accept=".csv" required hidden>
+
+                        <div class="drop-message" id="drop-message">
+                            <div class="upload-icon">⬆</div>
+                            <div class="upload-title">드래그 앤 드롭</div>
+                            <div class="upload-sub">클릭해서 CSV 파일 선택</div>
+                        </div>
+
+                        <div class="selected-file" id="selected-file" style="display: none;">
+                            선택된 파일: <span id="file-name"></span>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="bulk-submit-btn">CSV 대량 예측하기</button>
+                    </div>
+
+                    <div class="csv-example">
+                        <strong>CSV 컬럼 예시</strong><br>
+                        name, race, gender, age, discharge_disposition_id,<br>
+                        time_in_hospital, num_lab_procedures, num_procedures,<br>
+                        num_medications, number_outpatient, number_emergency,<br>
+                        number_inpatient, diag_1, diag_2, diag_3,<br>
+                        number_diagnoses, max_glu_serum, A1Cresult,<br>
+                        metformin, repaglinide, nateglinide, insulin,<br>
+                        change, diabetesMed<br><br>
+                        <span style="color:#6b7280;">
+                            ※ readmit_30d 컬럼이 있어도 예측 입력에서는 자동 제외됩니다.
+                        </span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>입력 안내</h2>
+
+                <div class="guide-box">
+                    <strong>1. 기본 정보 입력</strong>
+                    <span>환자명, 나이, 성별, 인종을 입력합니다.</span>
+                </div>
+
+                <div class="guide-box">
+                    <strong>2. 입원 및 진료 정보 입력</strong>
+                    <span>입원 기간, 검사 횟수, 시술 횟수, 투약 수, 진단 개수를 입력합니다.</span>
+                </div>
+
+                <div class="guide-box">
+                    <strong>3. 당뇨 치료 정보 입력</strong>
+                    <span>인슐린 처방, 당뇨약 처방 여부, 약물 변경 여부를 입력합니다.</span>
+                </div>
+
+                <div class="guide-box">
+                    <strong>4. CSV 대량 예측</strong>
+                    <span>동일한 컬럼 구조를 가진 CSV 파일을 업로드하면 여러 환자를 한 번에 예측합니다.</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('csv-file-input');
+    const selectedFileBox = document.getElementById('selected-file');
+    const fileNameText = document.getElementById('file-name');
+    const dropMessage = document.getElementById('drop-message');
+
+    dropArea.addEventListener('click', function (event) {
+        const clickedTag = event.target.tagName.toLowerCase();
+
+        if (clickedTag === 'button') {
+            return;
+        }
+
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) {
+            showSelectedFile(fileInput.files[0]);
+        }
+    });
+
+    dropArea.addEventListener('dragover', function (event) {
+        event.preventDefault();
+        dropArea.classList.add('drag-over');
+    });
+
+    dropArea.addEventListener('dragleave', function () {
+        dropArea.classList.remove('drag-over');
+    });
+
+    dropArea.addEventListener('drop', function (event) {
+        event.preventDefault();
+        dropArea.classList.remove('drag-over');
+
+        const files = event.dataTransfer.files;
+
+        if (files.length > 0) {
+            const file = files[0];
+
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('CSV 파일만 업로드할 수 있습니다.');
+                return;
+            }
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            showSelectedFile(file);
+        }
+    });
+
+    function showSelectedFile(file) {
+        fileNameText.textContent = file.name;
+        selectedFileBox.style.display = 'block';
+        dropMessage.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
