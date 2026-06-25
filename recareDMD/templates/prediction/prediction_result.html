@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>개인 예측 결과</title>
+
+    <style>
+        :root {
+            --main-navy: #1A1940;
+            --point-blue: #5F65D9;
+            --sub-lavender: #9AA3D9;
+            --dark-gray: #323440;
+            --light-bg: #F0F0F2;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px;
+            background: var(--light-bg);
+            font-family: Arial, sans-serif;
+            color: var(--dark-gray);
+        }
+
+        .page-wrap {
+            max-width: 1150px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--main-navy), var(--point-blue));
+            color: white;
+            padding: 30px 36px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 14px 28px rgba(26, 25, 64, 0.22);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .result-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
+            border: 1px solid rgba(154, 163, 217, 0.28);
+            margin-bottom: 22px;
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            color: var(--main-navy);
+            font-size: 20px;
+        }
+
+        .probability-card {
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            padding: 34px 26px;
+            box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
+            border-top: 8px solid var(--point-blue);
+        }
+
+        .patient-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--main-navy);
+            margin-bottom: 12px;
+        }
+
+        .probability-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .probability {
+            font-size: 52px;
+            font-weight: 900;
+            color: var(--point-blue);
+            margin-bottom: 12px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 900;
+            background: var(--main-navy);
+            color: white;
+            margin-bottom: 18px;
+        }
+
+        .risk-message {
+            margin: 0;
+            color: #4b5563;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .summary-table th {
+            width: 35%;
+            text-align: left;
+            color: var(--main-navy);
+            background: rgba(154, 163, 217, 0.16);
+            padding: 13px 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-table td {
+            padding: 13px 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .factor-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .factor-list li {
+            background: #fbfbfd;
+            border-left: 5px solid var(--point-blue);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .action-box {
+            background: rgba(154, 163, 217, 0.16);
+            border-radius: 16px;
+            padding: 18px;
+            color: var(--main-navy);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-row {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            text-decoration: none;
+            background: var(--point-blue);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 11px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            background: var(--main-navy);
+        }
+
+        .home-link {
+            display: inline-block;
+            text-decoration: none;
+            background: rgba(154, 163, 217, 0.28);
+            color: var(--main-navy);
+            padding: 12px 18px;
+            border-radius: 11px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 20px;
+            }
+
+            .result-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .probability {
+                font-size: 44px;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+    <div class="hero">
+        <h1>개인 환자 예측 결과</h1>
+        <p>입력된 환자 정보를 바탕으로 30일 이내 재입원 가능성을 예측했습니다.</p>
+    </div>
+
+    <div class="result-layout">
+
+        <div>
+            <div class="probability-card">
+                <div class="patient-name">{{ patient_name }}</div>
+                <div class="probability-label">30일 이내 재입원 확률</div>
+                <div class="probability">{{ probability }}%</div>
+                <div class="risk-badge">{{ risk_label }}</div>
+                <p class="risk-message">{{ risk_message }}</p>
+            </div>
+
+            <div class="card">
+                <h2>의료진 확인 사항</h2>
+                <div class="action-box">
+                    예측 결과는 진료 판단을 보조하기 위한 참고 정보입니다.
+                    실제 환자 상태, 검사 결과, 퇴원 계획, 보호자 지원 여부 등을 함께 확인해야 합니다.
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2>입력된 환자 정보</h2>
+
+                <table class="summary-table">
+                    <tbody>
+                    {% for key, value in input_summary.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>위험도 상승 요인</h2>
+
+                <ul class="factor-list">
+                    {% for factor in risk_factors %}
+                        <li>{{ factor }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="button-row">
+        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+        <a href="/" class="home-link">메인으로</a>
+    </div>
+
+</div>
+</body>
+</html>

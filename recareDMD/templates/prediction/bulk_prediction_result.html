@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CSV 대량 예측 결과</title>
+
+    <style>
+        :root {
+            --main-navy: #1A1940;
+            --point-blue: #5F65D9;
+            --sub-lavender: #9AA3D9;
+            --dark-gray: #323440;
+            --light-bg: #F0F0F2;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px;
+            background: var(--light-bg);
+            font-family: Arial, sans-serif;
+            color: var(--dark-gray);
+        }
+
+        .page-wrap {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--main-navy), var(--point-blue));
+            color: white;
+            padding: 30px 36px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 14px 28px rgba(26, 25, 64, 0.22);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 22px rgba(26, 25, 64, 0.08);
+            border-left: 6px solid var(--point-blue);
+        }
+
+        .summary-card:nth-child(2) {
+            border-left-color: #ef4444;
+        }
+
+        .summary-card:nth-child(3) {
+            border-left-color: var(--sub-lavender);
+        }
+
+        .summary-card:nth-child(4) {
+            border-left-color: var(--main-navy);
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            font-size: 28px;
+            color: var(--main-navy);
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
+            overflow-x: auto;
+        }
+
+        .table-card h2 {
+            margin: 0 0 8px;
+            color: var(--main-navy);
+            font-size: 20px;
+        }
+
+        .table-desc {
+            margin: 0 0 18px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 900px;
+        }
+
+        .result-table thead {
+            background: var(--main-navy);
+            color: white;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .result-table tbody tr:nth-child(even) {
+            background: #f8f9ff;
+        }
+
+        .result-table tbody tr:hover {
+            background: rgba(154, 163, 217, 0.2);
+        }
+
+        .result-table th:nth-last-child(1),
+        .result-table th:nth-last-child(2) {
+            background: var(--point-blue);
+        }
+
+        .result-table td:nth-last-child(1),
+        .result-table td:nth-last-child(2) {
+            font-weight: 900;
+            color: var(--main-navy);
+            background: rgba(154, 163, 217, 0.22);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            text-decoration: none;
+            background: var(--point-blue);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 11px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            background: var(--main-navy);
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 20px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .result-table {
+                min-width: 850px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+    <div class="hero">
+        <h1>CSV 대량 예측 결과</h1>
+        <p>업로드된 환자 정보를 기반으로 30일 이내 재입원 위험도를 예측했습니다.</p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <span>전체 환자 수</span>
+            <strong>{{ total_count }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>고위험 환자</span>
+            <strong>{{ high_count }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>중위험 환자</span>
+            <strong>{{ middle_count }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span>저위험 환자</span>
+            <strong>{{ low_count }}</strong>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h2>환자별 예측 결과</h2>
+        <p class="table-desc">
+            주요 환자 정보만 선별하여 표시합니다. 가장 오른쪽에서 환자의 재입원 확률과 위험 등급을 확인할 수 있습니다.
+        </p>
+
+        {{ table_html|safe }}
+    </div>
+
+    <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+
+</div>
+</body>
+</html>
