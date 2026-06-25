@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+
+# 환경변수
+.env
+
+# 미디어 · 정적 파일 (collectstatic 결과물)
+/media/
+/staticfiles/
+
+# ML 모델 — 필요시 주석 해제 후 Drive로 공유
+# model.pkl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 배포
+*.egg-info/
+dist/
+build/
