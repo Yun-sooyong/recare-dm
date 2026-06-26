@@ -10,14 +10,15 @@
         }
 
         :root {
-            --main-navy: #1A1940;
-            --point-blue: #5F65D9;
-            --sub-lavender: #9AA3D9;
-            --dark-gray: #323440;
-            --light-bg: #F0F0F2;
-            --white: #ffffff;
-            --border: #d9dce8;
-            --text-muted: #6b7280;
+            --main-navy: #4B4B8F;
+            --point-blue: #7B74D6;
+            --sub-lavender: #B8B5E8;
+            --soft-lavender: #E8E6F7;
+            --light-bg: #F4F3FB;
+            --card-bg: #FFFFFF;
+            --dark-text: #2F2F4F;
+            --muted-text: #7A7892;
+            --border: #D8D6EF;
         }
 
         body {
@@ -39,7 +40,7 @@
             padding: 30px 36px;
             border-radius: 18px;
             margin-bottom: 24px;
-            box-shadow: 0 14px 28px rgba(26, 25, 64, 0.24);
+            box-shadow: 0 14px 28px rgba(108, 108, 121, 0.24);
         }
 
         .hero h1 {
@@ -253,13 +254,69 @@
 
         .csv-example {
             margin-top: 15px;
-            padding: 15px;
+            padding: 18px;
             background: #fbfbfd;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 12px;
             color: var(--dark-gray);
             line-height: 1.7;
             border-left: 4px solid var(--point-blue);
+        }
+
+        .csv-example > strong {
+            display: block;
+            color: var(--main-navy);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .csv-example-desc {
+            margin: 0 0 14px;
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .csv-download-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            display: inline-block;
+            text-decoration: none;
+            background: var(--point-blue);
+            color: white;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .download-btn.secondary {
+            background: var(--main-navy);
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .csv-column-note {
+            padding: 13px;
+            border-radius: 11px;
+            background: rgba(154, 163, 217, 0.13);
+            color: var(--dark-gray);
+        }
+
+        .csv-column-note strong {
+            color: var(--main-navy);
+        }
+
+        .csv-column-note span {
+            color: var(--text-muted);
         }
 
         .csv-example strong {
@@ -345,6 +402,61 @@
                 width: 100%;
             }
         }
+        .download-btn {
+            display: inline-block;
+            text-decoration: none;
+            background: var(--point-blue);
+            color: white;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .download-btn.secondary {
+            background: var(--main-navy);
+        }
+
+        .cart-count {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .cart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cart-item {
+            padding: 13px 14px;
+            background: #fbfbfd;
+            border-left: 5px solid var(--point-blue);
+            border-radius: 12px;
+        }
+
+        .cart-item strong {
+            display: block;
+            color: var(--main-navy);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .cart-item span {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .empty-cart {
+            background: rgba(154, 163, 217, 0.14);
+            padding: 16px;
+            border-radius: 12px;
+            color: var(--main-navy);
+            font-size: 13px;
+            font-weight: 700;
+        }
     </style>
 </head>
 
@@ -373,7 +485,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>환자명</label>
-                        <input type="text" name="patient_name" placeholder="예: 김민수">
+                        <input type="text" name="patient_name" placeholder="예:">
                         <div class="hint">환자 구분을 위한 이름을 입력합니다.</div>
                     </div>
 
@@ -507,9 +619,21 @@
                 </div>
 
                 <div class="button-row">
-                    <button type="submit" class="btn-primary">재입원 위험도 예측</button>
-                    <button type="reset" class="btn-secondary">입력 초기화</button>
+                    <button type="submit" class="btn-primary">
+                        재입원 위험도 예측
+                    </button>
+
+                    <button type="submit"
+                            class="btn-secondary"
+                            formaction="{% url 'prediction:add_patient_cart' %}">
+                        환자 추가하기
+                    </button>
+
+                    <button type="reset" class="btn-secondary">
+                        입력 초기화
+                    </button>
                 </div>
+
             </form>
         </div>
 
@@ -540,18 +664,25 @@
                     </div>
 
                     <div class="csv-example">
-                        <strong>CSV 컬럼 예시</strong><br>
-                        name, race, gender, age, discharge_disposition_id,<br>
-                        time_in_hospital, num_lab_procedures, num_procedures,<br>
-                        num_medications, number_outpatient, number_emergency,<br>
-                        number_inpatient, diag_1, diag_2, diag_3,<br>
-                        number_diagnoses, max_glu_serum, A1Cresult,<br>
-                        metformin, repaglinide, nateglinide, insulin,<br>
-                        change, diabetesMed<br><br>
-                        <span style="color:#6b7280;">
-                            ※ readmit_30d 컬럼이 있어도 예측 입력에서는 자동 제외됩니다.
-                        </span>
+                        <strong>CSV 예시 파일</strong>
+
+                        <p class="csv-example-desc">
+                            아래 예시 파일을 내려받아 같은 형식으로 환자 정보를 입력한 뒤 업로드하세요.
+                        </p>
+
+                        <div class="csv-download-row">
+                            <a href="{% url 'prediction:download_sample_csv' %}" class="download-btn">
+                                예시 CSV 다운로드
+                            </a>
+
+                            <a href="{% url 'prediction:download_sample_pdf' %}" class="download-btn secondary">
+                                CSV 작성 안내 PDF
+                            </a>
+                        </div>
+
                     </div>
+
+                    
                 </form>
             </div>
 
@@ -577,6 +708,43 @@
                     <strong>4. CSV 대량 예측</strong>
                     <span>동일한 컬럼 구조를 가진 CSV 파일을 업로드하면 여러 환자를 한 번에 예측합니다.</span>
                 </div>
+            </div>
+
+            <div class="card">
+                <h2>담긴 환자 목록</h2>
+
+                {% if patient_cart %}
+                    <p class="cart-count">현재 {{ cart_count }}명의 환자가 담겨 있습니다.</p>
+
+                    <div class="cart-list">
+                        {% for patient in patient_cart %}
+                            <div class="cart-item">
+                                <strong>{{ forloop.counter }}. {{ patient.name }}</strong>
+                                <span>{{ patient.gender }} / {{ patient.age }} / 입원 {{ patient.time_in_hospital }}일</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="button-row">
+                        <form action="{% url 'prediction:predict_patient_cart' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-primary">
+                                담긴 환자 전체 예측
+                            </button>
+                        </form>
+
+                        <form action="{% url 'prediction:clear_patient_cart' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-secondary">
+                                장바구니 비우기
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p class="empty-cart">
+                        아직 담긴 환자가 없습니다. 환자 정보를 입력한 뒤 환자 추가하기를 눌러주세요.
+                    </p>
+                {% endif %}
             </div>
 
         </div>

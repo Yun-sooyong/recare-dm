@@ -6,12 +6,22 @@
 
     <style>
         :root {
-            --main-navy: #1A1940;
-            --point-blue: #5F65D9;
-            --sub-lavender: #9AA3D9;
-            --dark-gray: #323440;
-            --light-bg: #F0F0F2;
-            --white: #ffffff;
+            --main-navy: #4B4B8F;
+            --point-blue: #7B74D6;
+            --sub-lavender: #B8B5E8;
+            --soft-lavender: #E8E6F7;
+            --light-bg: #F4F3FB;
+            --card-bg: #FFFFFF;
+            --dark-text: #2F2F4F;
+            --muted-text: #7A7892;
+            --border: #D8D6EF;
+
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --middle-bg: #ede9fe;
+            --middle-text: #5b21b6;
+            --normal-bg: #dcfce7;
+            --normal-text: #166534;
         }
 
         * {
@@ -27,7 +37,7 @@
         }
 
         .page-wrap {
-            max-width: 1150px;
+            max-width: 1180px;
             margin: 0 auto;
         }
 
@@ -42,19 +52,19 @@
 
         .hero h1 {
             margin: 0 0 8px;
-            font-size: 27px;
-            font-weight: 800;
+            font-size: 28px;
+            font-weight: 900;
         }
 
         .hero p {
             margin: 0;
             font-size: 14px;
-            opacity: 0.9;
+            opacity: 0.92;
         }
 
         .result-layout {
             display: grid;
-            grid-template-columns: 1fr 1.4fr;
+            grid-template-columns: 0.9fr 1.4fr;
             gap: 24px;
             align-items: start;
         }
@@ -72,46 +82,67 @@
             margin: 0 0 18px;
             color: var(--main-navy);
             font-size: 20px;
+            font-weight: 900;
         }
 
         .probability-card {
-            text-align: center;
             background: white;
             border-radius: 20px;
             padding: 34px 26px;
             box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
             border-top: 8px solid var(--point-blue);
+            text-align: center;
+            margin-bottom: 22px;
         }
 
         .patient-name {
-            font-size: 15px;
-            font-weight: 800;
+            display: inline-block;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(154, 163, 217, 0.2);
             color: var(--main-navy);
-            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 900;
+            margin-bottom: 18px;
         }
 
         .probability-label {
             font-size: 13px;
-            color: #6b7280;
+            color: var(--muted);
             margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .probability {
-            font-size: 52px;
+            font-size: 56px;
             font-weight: 900;
             color: var(--point-blue);
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .risk-badge {
             display: inline-block;
+            min-width: 84px;
             padding: 9px 18px;
             border-radius: 999px;
             font-size: 14px;
             font-weight: 900;
-            background: var(--main-navy);
-            color: white;
             margin-bottom: 18px;
+        }
+
+        .risk-badge.high {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .risk-badge.middle {
+            background: var(--middle-bg);
+            color: var(--middle-text);
+        }
+
+        .risk-badge.normal {
+            background: var(--normal-bg);
+            color: var(--normal-text);
         }
 
         .risk-message {
@@ -128,12 +159,13 @@
         }
 
         .summary-table th {
-            width: 35%;
+            width: 36%;
             text-align: left;
             color: var(--main-navy);
             background: rgba(154, 163, 217, 0.16);
             padding: 13px 14px;
             border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
         }
 
         .summary-table td {
@@ -165,38 +197,58 @@
             color: var(--main-navy);
             font-size: 14px;
             line-height: 1.6;
+            font-weight: 700;
         }
 
         .button-row {
             margin-top: 24px;
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .back-link {
+        .back-link,
+        .home-link,
+        .patient-link,
+        .shap-link {
             display: inline-block;
             text-decoration: none;
-            background: var(--point-blue);
-            color: white;
             padding: 12px 18px;
             border-radius: 11px;
-            font-weight: 800;
+            font-weight: 900;
             font-size: 14px;
-        }
-
-        .back-link:hover {
-            background: var(--main-navy);
+            line-height: 1;
+            border: none;
         }
 
         .home-link {
-            display: inline-block;
-            text-decoration: none;
-            background: rgba(154, 163, 217, 0.28);
-            color: var(--main-navy);
-            padding: 12px 18px;
-            border-radius: 11px;
-            font-weight: 800;
-            font-size: 14px;
+            background: #4B4B8F;
+            color: white;
+        }
+
+        .back-link {
+            background: #7B74D6;
+            color: white;
+        }
+
+        .patient-link {
+            background: #B8B5E8;
+            color: #2F2F4F;
+        }
+
+        .shap-link {
+            background: linear-gradient(135deg, #4B4B8F, #7B74D6);
+            color: white;
+            box-shadow: 0 8px 18px rgba(75, 75, 143, 0.22);
+        }
+
+        .home-link:hover,
+        .back-link:hover,
+        .patient-link:hover,
+        .shap-link:hover {
+            transform: translateY(-1px);
+            opacity: 0.92;
         }
 
         @media (max-width: 900px) {
@@ -215,6 +267,13 @@
             .button-row {
                 flex-direction: column;
             }
+
+            .back-link,
+            .home-link,
+            .patient-link {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -232,9 +291,18 @@
         <div>
             <div class="probability-card">
                 <div class="patient-name">{{ patient_name }}</div>
+
                 <div class="probability-label">30일 이내 재입원 확률</div>
                 <div class="probability">{{ probability }}%</div>
-                <div class="risk-badge">{{ risk_label }}</div>
+
+                {% if risk_label == '고위험' %}
+                    <div class="risk-badge high">고위험</div>
+                {% elif risk_label == '중위험' %}
+                    <div class="risk-badge middle">중위험</div>
+                {% else %}
+                    <div class="risk-badge normal">정상</div>
+                {% endif %}
+
                 <p class="risk-message">{{ risk_message }}</p>
             </div>
 
@@ -277,8 +345,10 @@
     </div>
 
     <div class="button-row">
-        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="/" class="home-link">메인으로</a>
+        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+        <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+        <a href="{% url 'analysis:shap_page' %}" class="shap-link">SHAP 분석 보기</a>
     </div>
 
 </div>
