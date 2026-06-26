@@ -29,6 +29,27 @@
             color: var(--dark-gray);
         }
 
+        .prediction-header {
+            background: linear-gradient(135deg, #4f4a9c, #7b6ee6);
+            padding: 28px 32px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        .prediction-header h1 {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .prediction-header p {
+            color: #f1efff;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         .page-wrap {
             max-width: 1220px;
             margin: 0 auto;
@@ -489,8 +510,10 @@
 <div class="page-wrap">
 
     <div class="hero">
+
         <h1>환자 재입원 위험도 분석</h1>
         <p>입원 기간, 진단 정보, 방문 이력, 약물 정보를 기반으로 30일 이내 재입원 위험도를 예측합니다.</p>
+
     </div>
 
     {% if error %}
@@ -510,7 +533,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>환자명</label>
-                        <input type="text" name="patient_name" placeholder="예:">
+                        <input type="text" name="patient_name" placeholder="예: 홍길동">
                         <div class="hint">환자 구분을 위한 이름을 입력합니다.</div>
                     </div>
 
@@ -554,7 +577,7 @@
 
                     <div class="form-group">
                         <label>검사 횟수</label>
-                        <input type="number" name="num_lab_procedures" placeholder="예: 45" required>
+                        <input type="number" name="num_lab_procedures" placeholder="예: 5" required>
                         <div class="hint">입원 중 시행한 검사 횟수입니다.</div>
                     </div>
 
