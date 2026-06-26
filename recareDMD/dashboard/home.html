@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}대시보드{% endblock %}
+
+{% block content %}
+
+  <!-- 1. 통계 카드 4개 -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:1.5rem;">
+
+  <div style="background:white; border-left:4px solid #1B4F8A; border-radius:10px; padding:1.2rem;">
+    <p>전체 예측 환자</p>
+    <h2>{{ total_count }}명</h2>
+    <small>등록 기준</small>
+  </div>
+
+  <!-- 고위험 / 주의 / 정상 카드도 동일 구조, border-left 색상만 변경 -->
+  <!-- 고위험: #DC2626 / 주의: #D97706 / 정상: #059669 -->
+
+</div>
+  <!-- 2. 중간 2열: 고위험 테이블 + 차트 -->
+<div style="display:grid; grid-template-columns:3fr 2fr; gap:16px; margin-bottom:1.5rem;">
+
+  <!-- 왼쪽: 고위험 환자 현황 테이블 -->
+  <div style="background:white; border-radius:10px; overflow:hidden;">
+    <div style="padding:1rem; border-bottom:1px solid #eee;">
+      <span>⚠ 고위험 환자 현황</span>
+      <a href="#" style="float:right;">전체 보기 →</a>
+    </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#f8f9fa;">
+          <th>환자명</th><th>연령대</th><th>진단군</th>
+          <th>위험도</th><th>등급</th>
+          <!-- 추천관리 없음 -->
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in high_risk_list %}
+        <tr>
+          <td>{{ r.patient_name }}</td>
+          <td>{{ r.age }}</td>
+          <td>{{ r.get_diag_1_display }}</td>
+          <td>{{ r.risk_probability_pct }}%</td>
+          <td>고위험</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">고위험 환자 없음</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 오른쪽: 차트 -->
+  <div style="background:white; border-radius:10px; padding:1rem;">
+    <p>위험 등급별 환자 분포</p>
+    <canvas id="riskChart"></canvas>
+  </div>
+
+</div>
+  <!-- 3. 최근 진료기록 -->
+<div style="background:white; border-radius:10px; margin-bottom:1.5rem; overflow:hidden;">
+  <div style="padding:1rem; border-bottom:1px solid #eee;">
+    <span>🕐 최근 진료기록</span>
+  </div>
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr style="background:#f8f9fa;">
+        <th>환자코드</th><th>환자명</th><th>위험등급</th>
+        <th>입원기간</th><th>예측일시</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent_records %}
+      <tr>
+        <td>{{ r.patient_code }}</td>
+        <td>{{ r.patient_name }}</td>
+        <td>{{ r.risk_level }}</td>
+        <td>{{ r.time_in_hospital }}일</td>
+        <td>{{ r.created_at|date:"Y.m.d H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+  <!-- 4. 빠른 링크 -->
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const data = JSON.parse('{{ risk_chart|escapejs }}');
+new Chart(document.getElementById('riskChart'), {
+  type: 'bar',
+  data: {
+    labels: data.labels,
+    datasets: [{ data: data.values, backgroundColor: data.colors }]
+  },
+  options: { plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}
