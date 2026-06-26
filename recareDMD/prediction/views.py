@@ -2,6 +2,8 @@ import os
 import pickle
 import pandas as pd
 import csv
+import math
+import numpy as np
 
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -557,17 +559,18 @@ def download_sample_pdf(request):
 # 임시 저장 함수 
 #=========================
 def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
+    clean_features = clean_json_data(patient_data)
+
     prediction_data = PredictionData.objects.create(
-        patient_name=patient_data.get('name') or patient_data.get('patient_name') or '이름 없음',
-        gender=patient_data.get('gender'),
-        age=patient_data.get('age') or patient_data.get('raw_age'),
-        features=patient_data,
-        prediction_result=probability_percent,
+        patient_name=clean_features.get('name') or clean_features.get('patient_name') or '이름 없음',
+        gender=clean_features.get('gender'),
+        age=clean_features.get('age') or clean_features.get('raw_age'),
+        features=clean_features,
+        prediction_result=float(probability_percent),
         risk_level=risk_label,
     )
 
     return prediction_data
-    
 #=========================
 # 환자 장바구니 기능
 #=========================
@@ -700,3 +703,33 @@ def predict_patient_cart(request):
             'patient_cart': request.session.get('patient_cart', []),
             'cart_count': len(request.session.get('patient_cart', [])),
         })
+        
+def clean_json_value(value):
+    if isinstance(value, dict):
+        return {key: clean_json_value(val) for key, val in value.items()}
+
+    if isinstance(value, list):
+        return [clean_json_value(item) for item in value]
+
+    if isinstance(value, np.integer):
+        return int(value)
+
+    if isinstance(value, np.floating):
+        if math.isnan(value):
+            return None
+        return float(value)
+
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+
+    try:
+        if pd.isna(value):
+            return None
+    except Exception:
+        pass
+
+    return value
+
+
+def clean_json_data(data):
+    return {key: clean_json_value(value) for key, value in data.items()}
