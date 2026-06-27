@@ -1,4 +1,5 @@
 from django.db import models
+from patients.models import PersonalInfo
 
 
 class DischargeRecord(models.Model) :
