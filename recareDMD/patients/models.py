@@ -47,13 +47,14 @@ class Patient(models.Model):
     @property
     def visit_count(self):
         # 화면 표시용 총 내원 횟수. 모델 입력 number_* 와 무관.
-        return self.encounters.count()
+        return self.predictions.count()
 
 
-class Encounter(models.Model):
+class PredictionData(models.Model):
+    # 문서상 VisitHistory/PredictionData 통합. 한 행 = 한 내원 + (있으면) 예측 결과.
     visit_id = models.AutoField(primary_key=True)
     patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, related_name="encounters"
+        Patient, on_delete=models.CASCADE, related_name="predictions"
     )
     encounter_id = models.BigIntegerField(unique=True)
 
@@ -113,13 +114,22 @@ class Encounter(models.Model):
     # 실제 재입원 라벨(타깃). 원본값 NO/<30/>30 그대로 저장. 모델 입력 아님(누수 아님).
     readmitted = models.CharField(max_length=10, blank=True)
 
+    # ── 예측 결과 (PredictionData 통합. 한 내원당 1건) ──
+    # 아직 예측 안 된 내원은 null. prediction(정은)이 채운다.
+    readmit_proba = models.FloatField(null=True, blank=True,
+        help_text="30일 재입원 위험도 (0~1). 미예측 시 null")
+    risk_level = models.CharField(max_length=10, blank=True,
+        help_text="위험 등급 (high/medium/low 등). 미예측 시 빈 문자열")
+    predicted_at = models.DateTimeField(null=True, blank=True,
+        help_text="예측 수행 시각. 미예측 시 null")
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["patient_id", "visit_date", "encounter_id"]
 
     def __str__(self):
-        return f"Encounter({self.encounter_id}) of Patient({self.patient.patient_nbr})"
+        return f"PredictionData({self.encounter_id}) of Patient({self.patient.patient_nbr})"
 
     @property
     def readmit_30d(self):
@@ -129,7 +139,7 @@ class Encounter(models.Model):
     @property
     def visit_seq(self):
         # 내원 차수. 저장 안 하고 계산. visit_date 오름차순, 동일자는 encounter_id tie-break.
-        earlier = self.patient.encounters.filter(
+        earlier = self.patient.predictions.filter(
             models.Q(visit_date__lt=self.visit_date)
             | models.Q(visit_date=self.visit_date, encounter_id__lte=self.encounter_id)
         )

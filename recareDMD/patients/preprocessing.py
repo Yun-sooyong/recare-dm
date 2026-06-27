@@ -92,7 +92,7 @@ def group_by_icd9(code):
 
 
 def encounter_to_features(encounter):
-    # Encounter 인스턴스 -> 모델 입력 dict(MODEL_FEATURES 순서). 파생 3종 포함.
+    # PredictionData 인스턴스(한 내원) -> 모델 입력 dict(MODEL_FEATURES 순서). 파생 3종 포함.
     f = {
         "race": encounter.race,
         "gender": encounter.gender,
