@@ -5,7 +5,7 @@ from django.db.models import Count, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import PatientForm
-from .models import MEDICATION_FIELDS, Encounter, Patient
+from .models import MEDICATION_FIELDS, Patient, PredictionData
 from .preprocessing import group_by_icd9
 
 PAGE_SIZE = 20
@@ -14,12 +14,12 @@ PAGE_SIZE = 20
 def patient_list(request):
     q = request.GET.get("q", "").strip()
 
-    latest = Encounter.objects.filter(patient=OuterRef("pk")).order_by(
+    latest = PredictionData.objects.filter(patient=OuterRef("pk")).order_by(
         "-visit_date", "-encounter_id"
     )
     patients = Patient.objects.annotate(
-        n_visits=Count("encounters", distinct=True),
-        last_visit=Max("encounters__visit_date"),
+        n_visits=Count("predictions", distinct=True),
+        last_visit=Max("predictions__visit_date"),
         latest_age=Subquery(latest.values("age")[:1]),
         latest_gender=Subquery(latest.values("gender")[:1]),
     ).order_by("patient_nbr")
@@ -70,7 +70,7 @@ def patient_delete(request, pk):
     return render(
         request,
         "patients/patient_confirm_delete.html",
-        {"patient": patient, "n_visits": patient.encounters.count()},
+        {"patient": patient, "n_visits": patient.predictions.count()},
     )
 
 
@@ -147,7 +147,7 @@ def _build_chart(timeline):
 def patient_detail(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
     # 시간순 1회 조회. visit_seq property 반복 호출(N+1) 회피 위해 enumerate 로 차수 부여.
-    encounters = list(patient.encounters.order_by("visit_date", "encounter_id"))
+    encounters = list(patient.predictions.order_by("visit_date", "encounter_id"))
 
     rows = []
     timeline = []

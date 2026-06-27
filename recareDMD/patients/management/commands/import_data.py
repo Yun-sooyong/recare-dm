@@ -5,7 +5,7 @@ import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from patients.models import Patient, Encounter, MEDICATION_FIELDS
+from patients.models import Patient, PredictionData, MEDICATION_FIELDS
 from patients.preprocessing import MEDICATION_DB_TO_FEATURE
 
 SEED = 42
@@ -39,13 +39,13 @@ def _to_char(v):
 
 
 class Command(BaseCommand):
-    help = "diabetic_data.csv 정제·샘플링 후 Patient/Encounter 적재. number_* 원본값 보존."
+    help = "diabetic_data.csv 정제·샘플링 후 Patient/PredictionData 적재. number_* 원본값 보존."
 
     def add_arguments(self, parser):
         parser.add_argument("csv_path", help="원본 diabetic_data.csv 경로")
         parser.add_argument("--patients", type=int, default=250, help="목표 환자 수")
         parser.add_argument("--encounters", type=int, default=500, help="목표 내원 수")
-        parser.add_argument("--clear", action="store_true", help="적재 전 Patient/Encounter 전체 삭제")
+        parser.add_argument("--clear", action="store_true", help="적재 전 Patient/PredictionData 전체 삭제")
 
     def handle(self, *args, **opts):
         path = opts["csv_path"]
@@ -129,7 +129,7 @@ class Command(BaseCommand):
                     patient_nbr=int(row["patient_nbr"])
                 )
                 enc_id = int(row["encounter_id"])
-                if Encounter.objects.filter(encounter_id=enc_id).exists():
+                if PredictionData.objects.filter(encounter_id=enc_id).exists():
                     continue
 
                 tih = _to_int(row.get("time_in_hospital"))
@@ -147,24 +147,24 @@ class Command(BaseCommand):
                     csv_col = MEDICATION_DB_TO_FEATURE[db_field]
                     fields[db_field] = _to_char(row.get(csv_col)) or "No"
 
-                Encounter.objects.create(**fields)
+                PredictionData.objects.create(**fields)
 
     def _report(self, sample):
         total_p = Patient.objects.count()
-        total_e = Encounter.objects.count()
+        total_e = PredictionData.objects.count()
         from django.db.models import Count
 
         multi_p = (
-            Patient.objects.annotate(n=Count("encounters"))
+            Patient.objects.annotate(n=Count("predictions"))
             .filter(n__gte=2)
             .count()
         )
-        readmit_pos = Encounter.objects.filter(readmitted="<30").count()
-        inpatient_gt0 = Encounter.objects.filter(number_inpatient__gt=0).count()
+        readmit_pos = PredictionData.objects.filter(readmitted="<30").count()
+        inpatient_gt0 = PredictionData.objects.filter(number_inpatient__gt=0).count()
 
         self.stdout.write(self.style.SUCCESS("=== 적재 완료 ==="))
         self.stdout.write(f"Patient 수: {total_p}")
-        self.stdout.write(f"Encounter 수: {total_e}")
+        self.stdout.write(f"PredictionData(내원) 수: {total_e}")
         self.stdout.write(f"내원 2회 이상 환자 수: {multi_p}")
         if total_e:
             self.stdout.write(
