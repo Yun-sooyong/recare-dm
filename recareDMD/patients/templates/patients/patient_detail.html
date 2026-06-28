@@ -69,7 +69,8 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
     <div class="quick-actions">
       <a class="btn btn-purple" href="{% url 'patients:patient_update' patient.pk %}">환자 수정</a>
       <a class="btn btn-danger" href="{% url 'patients:patient_delete' patient.pk %}">환자 삭제</a>
-      {# 이동맵 외부 연결(SHAP 분석·퇴원 안내·재방문 등록)은 담당 URL 미정 → 비활성 placeholder #}
+      <a class="btn btn-purple" href="{% url 'discharge_guide' patient_id=patient.pk %}">퇴원 준비도</a>
+      <a class="btn btn-purple" href="{% url 'discharge_revisit' patient_id=patient.pk %}">재방문 등록</a>
     </div>
 
     <!-- SHAP TOP 3 위험 요인 -->
