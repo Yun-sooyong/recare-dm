@@ -14,6 +14,7 @@ TODO: base.html 완성 시 extends + block content 로 전환.
 <body>
   <!-- 공통 후보: 헤더 -->
   <header class="page-header">
+    <a class="back-link" href="{% url 'dashboard:home' %}">← 대시보드</a>
     <h1>환자 관리</h1>
     <div class="subtitle">등록 환자 목록 · 내원 이력 기반</div>
   </header>
