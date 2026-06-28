@@ -7,7 +7,8 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-from .models import PredictionData
+from django.utils import timezone
+from patients.models import PersonalInfo, PredictionData as PatientPrediction
 
 
 # =========================
@@ -554,16 +555,48 @@ def download_sample_pdf(request):
     return response
 
 #=========================
-# 임시 저장 함수 
+# 저장 함수 — patients.PredictionData 에 연결 저장
 #=========================
 def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
-    prediction_data = PredictionData.objects.create(
-        patient_name=patient_data.get('name') or patient_data.get('patient_name') or '이름 없음',
-        gender=patient_data.get('gender'),
-        age=patient_data.get('age') or patient_data.get('raw_age'),
-        features=patient_data,
-        prediction_result=probability_percent,
+    # 환자 찾기/생성
+    nbr = patient_data.get('patient_nbr')
+    if nbr:
+        patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
+    else:
+        max_nbr = PersonalInfo.objects.order_by('-patient_nbr').values_list('patient_nbr', flat=True).first() or 10000
+        patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
+
+    max_eid = PatientPrediction.objects.order_by('-encounter_id').values_list('encounter_id', flat=True).first() or 0
+
+    prediction_data = PatientPrediction.objects.create(
+        patient=patient,
+        encounter_id=max_eid + 1,
+        visit_date=timezone.now().date(),
+        is_inpatient=True,
+        race=patient_data.get('race', ''),
+        gender=patient_data.get('gender', ''),
+        age=patient_data.get('age') or patient_data.get('raw_age', ''),
+        time_in_hospital=int(patient_data.get('time_in_hospital') or 0),
+        num_lab_procedures=int(patient_data.get('num_lab_procedures') or 0),
+        num_procedures=int(patient_data.get('num_procedures') or 0),
+        num_medications=int(patient_data.get('num_medications') or 0),
+        number_outpatient=int(patient_data.get('number_outpatient') or 0),
+        number_emergency=int(patient_data.get('number_emergency') or 0),
+        number_inpatient=int(patient_data.get('number_inpatient') or 0),
+        number_diagnoses=int(patient_data.get('number_diagnoses') or 0),
+        diag_1=patient_data.get('diag_1', ''),
+        diag_2=patient_data.get('diag_2', ''),
+        diag_3=patient_data.get('diag_3', ''),
+        max_glu_serum=patient_data.get('max_glu_serum', ''),
+        A1Cresult=patient_data.get('A1Cresult', ''),
+        discharge_disposition_id=int(patient_data.get('discharge_disposition_id') or 1),
+        metformin=patient_data.get('metformin', 'No'),
+        insulin=patient_data.get('insulin', 'No'),
+        change=patient_data.get('change', ''),
+        diabetesMed=patient_data.get('diabetesMed', ''),
+        readmit_proba=float(probability_percent),
         risk_level=risk_label,
+        predicted_at=timezone.now(),
     )
 
     return prediction_data

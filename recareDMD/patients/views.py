@@ -1,9 +1,8 @@
-import hashlib
-
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 
+from analysis.models import ShapResult
 from .forms import PatientForm
 from .models import MEDICATION_FIELDS, PersonalInfo, PredictionData
 from .preprocessing import group_by_icd9
@@ -78,15 +77,10 @@ def patient_delete(request, pk):
 # 환자 상세
 # ---------------------------------------------------------------------------
 
-def get_demo_risk(encounter):
-    """30일 재입원 위험도(%) — 데모 값.
-
-    # DEMO: 예측 모델 미연결. prediction 앱 연동 시 이 함수만 실제 예측
-    # (preprocessing.encounter_to_features → 모델 추론)으로 교체하면 됨.
-    # encounter_id 기반 고정 시드 → 같은 내원은 매번 같은 값(5~85%).
-    """
-    digest = hashlib.md5(str(encounter.encounter_id).encode()).hexdigest()
-    return int(digest, 16) % 81 + 5
+def get_risk(encounter):
+    if encounter.readmit_proba is not None:
+        return round(encounter.readmit_proba, 1)
+    return None
 
 
 def _diag_view(code):
@@ -144,21 +138,27 @@ def _build_chart(timeline):
     }
 
 
+def _get_shap_top3(prediction_data):
+    shaps = ShapResult.objects.filter(prediction=prediction_data).order_by('-shap_value')[:3]
+    return [{"name": s.feature_name, "value": round(s.shap_value, 3)} for s in shaps]
+
+
 def patient_detail(request, pk):
     patient = get_object_or_404(PersonalInfo, pk=pk)
-    # 시간순 1회 조회. visit_seq property 반복 호출(N+1) 회피 위해 enumerate 로 차수 부여.
     encounters = list(patient.predictions.order_by("visit_date", "encounter_id"))
 
     rows = []
     timeline = []
     latest_age = latest_gender = ""
+    latest_shap = []
     for seq, e in enumerate(encounters, start=1):
-        risk = get_demo_risk(e)
+        risk = get_risk(e)
         rows.append(
             {
                 "e": e,
                 "seq": seq,
                 "risk": risk,
+                "risk_level": e.risk_level,
                 "diags": [
                     d
                     for d in (
@@ -171,10 +171,14 @@ def patient_detail(request, pk):
                 "meds": _active_meds(e),
             }
         )
-        timeline.append({"seq": seq, "date": e.visit_date, "risk": risk})
-        latest_age, latest_gender = e.age, e.gender  # 시간순 마지막 = 최근 내원
+        if risk is not None:
+            timeline.append({"seq": seq, "date": e.visit_date, "risk": risk})
+        latest_age, latest_gender = e.age, e.gender
 
-    # 카드/차트 모두 시간순(1차 → N차)으로 일관 표시.
+    # 최근 내원의 SHAP TOP3
+    if encounters:
+        latest_shap = _get_shap_top3(encounters[-1])
+
     return render(
         request,
         "patients/patient_detail.html",
@@ -186,5 +190,6 @@ def patient_detail(request, pk):
             "latest_gender": latest_gender,
             "chart": _build_chart(timeline) if len(timeline) >= 2 else None,
             "single_visit": len(timeline) == 1,
+            "shap_top3": latest_shap,
         },
     )
