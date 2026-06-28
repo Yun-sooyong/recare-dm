@@ -32,7 +32,7 @@ MEDICATION_CHOICES = [
 ]
 
 
-class Patient(models.Model):
+class PersonalInfo(models.Model):
     patient_nbr = models.BigIntegerField(unique=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,7 +42,7 @@ class Patient(models.Model):
         ordering = ["patient_nbr"]
 
     def __str__(self):
-        return f"Patient({self.patient_nbr})"
+        return f"PersonalInfo({self.patient_nbr})"
 
     @property
     def visit_count(self):
@@ -54,7 +54,7 @@ class PredictionData(models.Model):
     # 문서상 VisitHistory/PredictionData 통합. 한 행 = 한 내원 + (있으면) 예측 결과.
     visit_id = models.AutoField(primary_key=True)
     patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, related_name="predictions"
+        PersonalInfo, on_delete=models.CASCADE, related_name="predictions"
     )
     encounter_id = models.BigIntegerField(unique=True)
 
@@ -129,7 +129,7 @@ class PredictionData(models.Model):
         ordering = ["patient_id", "visit_date", "encounter_id"]
 
     def __str__(self):
-        return f"PredictionData({self.encounter_id}) of Patient({self.patient.patient_nbr})"
+        return f"PredictionData({self.encounter_id}) of PersonalInfo({self.patient.patient_nbr})"
 
     @property
     def readmit_30d(self):
