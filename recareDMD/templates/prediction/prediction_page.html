@@ -1,132 +1,20 @@
+{% load static %}
+<!doctype html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>환자 재입원 위험도 예측</title>
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --main-navy: #4B4B8F;
-            --point-blue: #7B74D6;
-            --sub-lavender: #B8B5E8;
-            --soft-lavender: #E8E6F7;
-            --light-bg: #F4F3FB;
-            --card-bg: #FFFFFF;
-            --dark-text: #2F2F4F;
-            --muted-text: #7A7892;
-            --border: #D8D6EF;
-        }
-
-        body {
-            margin: 0;
-            padding: 32px;
-            background: var(--light-bg);
-            font-family: Arial, sans-serif;
-            color: var(--dark-gray);
-        }
-
-        .prediction-header {
-            background: linear-gradient(135deg, #4f4a9c, #7b6ee6);
-            padding: 28px 32px;
-            border-radius: 14px;
-            margin-bottom: 24px;
-        }
-
-        .prediction-header h1 {
-            color: #ffffff;
-            font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 12px;
-        }
-
-        .prediction-header p {
-            color: #f1efff;
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 0;
-        }
-
-        .page-wrap {
-            max-width: 1220px;
-            margin: 0 auto;
-        }
-        .prediction-header {
-            background: linear-gradient(135deg, #4b4a9f 0%, #7667db 100%);
-            padding: 30px 34px;
-            border-radius: 16px;
-            margin-bottom: 26px;
-            box-shadow: 0 10px 24px rgba(79, 74, 156, 0.22);
-        }
-
-        .prediction-header h1 {
-            color: #ffffff;
-            font-size: 27px;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            letter-spacing: -0.5px;
-        }
-
-        .prediction-header p {
-            color: rgba(255, 255, 255, 0.88);
-            font-size: 14px;
-            font-weight: 400;
-            margin: 0;
-            line-height: 1.7;
-        }
-        .hero {
-            background: linear-gradient(135deg, #4b4a9f 0%, #7667db 100%);
-            padding: 30px 34px;
-            border-radius: 16px;
-            margin-bottom: 26px;
-            box-shadow: 0 10px 24px rgba(79, 74, 156, 0.22);
-        }
-
-        .hero h1 {
-            color: #ffffff !important;
-            font-size: 27px;
-            font-weight: 800;
-            margin: 0 0 10px 0;
-            letter-spacing: -0.5px;
-        }
-
-        .hero p {
-            color: rgba(255, 255, 255, 0.88) !important;
-            font-size: 14px;
-            font-weight: 400;
-            margin: 0;
-            line-height: 1.7;
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-            align-items: start;
-        }
-
-        .card {
-            background: var(--white);
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 10px 24px rgba(26, 25, 64, 0.08);
-            margin-bottom: 22px;
-            border: 1px solid rgba(154, 163, 217, 0.28);
-        }
-
-        .card h2 {
-            margin: 0 0 20px;
-            font-size: 19px;
-            color: var(--main-navy);
-        }
+        /* common.css에 없는, 이 페이지 전용 보조 스타일만 추가 */
 
         .section-title {
             margin: 26px 0 13px;
             font-size: 15px;
             font-weight: 800;
-            color: var(--point-blue);
+            color: var(--point-color);
         }
 
         .section-title:first-of-type {
@@ -144,34 +32,29 @@
             flex-direction: column;
         }
 
-        label {
+        .form-group label {
             font-size: 13px;
             font-weight: 800;
             margin-bottom: 7px;
-            color: var(--main-navy);
+            color: var(--main-color);
         }
 
-        input,
-        select {
+        .form-group input,
+        .form-group select {
             height: 43px;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 0 12px;
             font-size: 14px;
-            background: #fbfbfd;
-            color: var(--dark-gray);
+            background: var(--bg-card);
+            color: var(--text-main);
         }
 
-        input::placeholder {
-            color: #9ca3af;
-        }
-
-        input:focus,
-        select:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
-            border-color: var(--point-blue);
-            background: var(--white);
-            box-shadow: 0 0 0 3px rgba(95, 101, 217, 0.16);
+            border-color: var(--point-color);
+            box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
         }
 
         .hint {
@@ -181,136 +64,19 @@
             line-height: 1.4;
         }
 
-        .button-row {
-            margin-top: 28px;
-            display: flex;
-            gap: 12px;
-        }
-
-        button {
-            border: none;
-            border-radius: 11px;
-            padding: 13px 21px;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.18s ease;
-        }
-
-        .btn-primary {
-            background: var(--point-blue);
-            color: #ffffff !important;
-            box-shadow: 0 8px 16px rgba(95, 101, 217, 0.25);
-        }
-
-        .btn-primary:hover {
-            background: var(--main-navy);
-        }
-
-        .btn-secondary {
-            background: rgba(154, 163, 217, 0.24);
-            color: var(--main-navy);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(154, 163, 217, 0.42);
-        }
-
-        .csv-box {
-            border: 2px dashed var(--sub-lavender);
-            background: rgba(154, 163, 217, 0.16);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s ease;
-        }
-
-        .csv-box:hover {
-            background: rgba(154, 163, 217, 0.24);
-            border-color: var(--point-blue);
-        }
-
-        .csv-box.drag-over {
-            background: rgba(95, 101, 217, 0.18);
-            border-color: var(--point-blue);
-            box-shadow: 0 0 0 4px rgba(95, 101, 217, 0.12);
-        }
-
-        .csv-box strong {
-            display: block;
-            color: var(--main-navy);
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-
-        .csv-box p {
-            font-size: 13px;
-            color: var(--dark-gray);
-            line-height: 1.5;
-            margin: 0 0 15px;
-        }
-
-        .drop-message {
-            background: #ffffff;
-            border-radius: 14px;
-            padding: 26px 16px;
-            margin: 15px 0;
-            border: 1px solid rgba(154, 163, 217, 0.5);
-        }
-
-        .upload-icon {
-            width: 46px;
-            height: 46px;
-            margin: 0 auto 10px;
-            border-radius: 50%;
-            background: var(--point-blue);
-            color: white;
-            font-size: 25px;
-            line-height: 46px;
-            font-weight: 900;
-        }
-
-        .upload-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--main-navy);
-            margin-bottom: 5px;
-        }
-
-        .upload-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .selected-file {
-            margin: 14px 0;
-            padding: 12px;
-            border-radius: 10px;
-            background: var(--main-navy);
-            color: white;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .selected-file span {
-            color: var(--sub-lavender);
-        }
-
         .csv-example {
             margin-top: 15px;
             padding: 18px;
-            background: #fbfbfd;
+            background: var(--bg-soft);
             border-radius: 14px;
             font-size: 12px;
-            color: var(--dark-gray);
+            color: var(--text-main);
             line-height: 1.7;
-            border-left: 4px solid var(--point-blue);
         }
 
         .csv-example > strong {
             display: block;
-            color: var(--main-navy);
+            color: var(--main-color);
             font-size: 15px;
             margin-bottom: 8px;
         }
@@ -332,8 +98,8 @@
         .download-btn {
             display: inline-block;
             text-decoration: none;
-            background: var(--point-blue);
-            color: white;
+            background: var(--point-color);
+            color: var(--white) !important;
             padding: 11px 14px;
             border-radius: 10px;
             font-size: 13px;
@@ -342,125 +108,25 @@
         }
 
         .download-btn.secondary {
-            background: var(--main-navy);
+            background: var(--main-color);
         }
 
         .download-btn:hover {
             opacity: 0.9;
         }
 
-        .csv-column-note {
-            padding: 13px;
-            border-radius: 11px;
-            background: rgba(154, 163, 217, 0.13);
-            color: var(--dark-gray);
-        }
-
-        .csv-column-note strong {
-            color: var(--main-navy);
-        }
-
-        .csv-column-note span {
-            color: var(--text-muted);
-        }
-
-        .csv-example strong {
-            color: var(--main-navy);
-        }
-
-        .guide-box {
-            background: #fbfbfd;
-            padding: 16px;
-            border-radius: 13px;
-            margin-bottom: 13px;
-            border-left: 5px solid var(--point-blue);
-        }
-
-        .guide-box strong {
-            display: block;
-            font-size: 14px;
-            color: var(--main-navy);
-            margin-bottom: 6px;
-        }
-
-        .guide-box span {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .mini-result-preview {
-            background: var(--main-navy);
-            color: var(--white);
-            border-radius: 16px;
-            padding: 22px;
-            text-align: center;
-            margin-top: 14px;
-        }
-
-        .mini-result-preview .percent {
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--sub-lavender);
-            margin: 10px 0 4px;
-        }
-
-        .mini-result-preview .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: var(--point-blue);
-            color: var(--white);
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-        .error {
-            background: #fff1f2;
-            color: #991b1b;
-            padding: 14px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 800;
-            border-left: 5px solid #ef4444;
-        }
-
-        @media (max-width: 900px) {
-            body {
-                padding: 20px;
-            }
-
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .button-row {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-        }
-        .download-btn {
-            display: inline-block;
-            text-decoration: none;
-            background: var(--point-blue);
-            color: white;
-            padding: 11px 14px;
+        .selected-file {
+            margin: 14px 0;
+            padding: 12px;
             border-radius: 10px;
+            background: var(--main-color);
+            color: var(--white);
             font-size: 13px;
-            font-weight: 800;
-            text-align: center;
+            font-weight: 700;
         }
 
-        .download-btn.secondary {
-            background: var(--main-navy);
+        .selected-file span {
+            color: var(--point-color);
         }
 
         .cart-count {
@@ -477,14 +143,13 @@
 
         .cart-item {
             padding: 13px 14px;
-            background: #fbfbfd;
-            border-left: 5px solid var(--point-blue);
+            background: var(--bg-soft);
             border-radius: 12px;
         }
 
         .cart-item strong {
             display: block;
-            color: var(--main-navy);
+            color: var(--main-color);
             font-size: 14px;
             margin-bottom: 5px;
         }
@@ -495,12 +160,28 @@
         }
 
         .empty-cart {
-            background: rgba(154, 163, 217, 0.14);
+            background: var(--bg-soft);
             padding: 16px;
             border-radius: 12px;
-            color: var(--main-navy);
+            color: var(--main-color);
             font-size: 13px;
             font-weight: 700;
+        }
+
+        .error {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -509,10 +190,8 @@
 <div class="page-wrap">
 
     <div class="hero">
-
         <h1>환자 재입원 위험도 분석</h1>
         <p>입원 기간, 진단 정보, 방문 이력, 약물 정보를 기반으로 30일 이내 재입원 위험도를 예측합니다.</p>
-
     </div>
 
     {% if error %}
@@ -666,17 +345,17 @@
                 </div>
 
                 <div class="button-row">
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn btn-primary">
                         재입원 위험도 예측
                     </button>
 
                     <button type="submit"
-                            class="btn-secondary"
+                            class="btn btn-secondary"
                             formaction="{% url 'prediction:add_patient_cart' %}">
                         환자 추가하기
                     </button>
 
-                    <button type="reset" class="btn-secondary">
+                    <button type="reset" class="btn btn-secondary">
                         입력 초기화
                     </button>
                 </div>
@@ -707,7 +386,7 @@
                             선택된 파일: <span id="file-name"></span>
                         </div>
 
-                        <button type="submit" class="btn-primary" id="bulk-submit-btn">CSV 대량 예측하기</button>
+                        <button type="submit" class="btn btn-primary" id="bulk-submit-btn">CSV 대량 예측하기</button>
                     </div>
 
                     <div class="csv-example">
@@ -729,7 +408,6 @@
 
                     </div>
 
-                    
                 </form>
             </div>
 
@@ -758,14 +436,14 @@
                     <div class="button-row">
                         <form action="{% url 'prediction:predict_patient_cart' %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="btn-primary">
+                            <button type="submit" class="btn btn-primary">
                                 담긴 환자 전체 예측
                             </button>
                         </form>
 
                         <form action="{% url 'prediction:clear_patient_cart' %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="btn-secondary">
+                            <button type="submit" class="btn btn-secondary">
                                 장바구니 비우기
                             </button>
                         </form>

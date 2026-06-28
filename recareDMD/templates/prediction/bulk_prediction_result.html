@@ -1,135 +1,60 @@
+{% load static %}
+<!doctype html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSV 대량 예측 결과</title>
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
 
     <style>
-        :root {
-            --main-navy: #4B4B8F;
-            --point-blue: #7B74D6;
-            --sub-lavender: #B8B5E8;
-            --soft-lavender: #E8E6F7;
-            --light-bg: #F4F3FB;
-            --white: #ffffff;
-            --dark-gray: #2F2F4F;
-            --muted: #7A7892;
-            --border: #D8D6EF;
-
-            --danger-row: #FFF1F2;
-            --danger-strong: #FECACA;
-            --danger-text: #B4233C;
-
-            --middle-row: #F3F0FF;
-            --middle-strong: #DDD6FE;
-            --middle-text: #5B21B6;
-
-            --normal-row: #F0FDF4;
-            --normal-strong: #BBF7D0;
-            --normal-text: #166534;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 32px;
-            background: var(--light-bg);
-            font-family: Arial, sans-serif;
-            color: var(--dark-gray);
-        }
-
-        .page-wrap {
-            max-width: 1320px;
-            margin: 0 auto;
-        }
-
-        .hero {
-            background: linear-gradient(135deg, var(--main-navy), var(--point-blue));
-            color: white;
-            padding: 30px 36px;
-            border-radius: 18px;
-            margin-bottom: 24px;
-            box-shadow: 0 14px 28px rgba(75, 75, 143, 0.24);
-        }
-
-        .hero h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-            font-weight: 900;
-        }
-
-        .hero p {
-            margin: 0;
-            font-size: 14px;
-            opacity: 0.92;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 22px;
-        }
+        /* common.css에 없는, 이 페이지 전용 보조 스타일만 추가 */
 
         .summary-card {
-            background: white;
-            border-radius: 16px;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
             padding: 20px;
-            box-shadow: 0 8px 22px rgba(75, 75, 143, 0.10);
-            border-left: 6px solid var(--point-blue);
-        }
-
-        .summary-card:nth-child(2) {
-            border-left-color: #ef4444;
-        }
-
-        .summary-card:nth-child(3) {
-            border-left-color: var(--sub-lavender);
-        }
-
-        .summary-card:nth-child(4) {
-            border-left-color: var(--main-navy);
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
         }
 
         .summary-card span {
             display: block;
             font-size: 13px;
-            color: var(--muted);
+            color: var(--text-sub);
             margin-bottom: 8px;
         }
 
         .summary-card strong {
             font-size: 28px;
-            color: var(--main-navy);
+            color: var(--main-color);
         }
 
         .table-card {
-            background: white;
-            border-radius: 18px;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
             padding: 24px;
-            box-shadow: 0 10px 24px rgba(75, 75, 143, 0.10);
-            overflow: visible;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
         }
 
         .table-card h2 {
             margin: 0 0 8px;
-            color: var(--main-navy);
+            color: var(--main-color);
             font-size: 21px;
             font-weight: 900;
         }
 
         .table-desc {
             margin: 0 0 18px;
-            color: var(--muted);
+            color: var(--text-sub);
             font-size: 13px;
         }
 
         .filter-card {
-            background: #fbfbff;
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            background: var(--bg-soft);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
             padding: 18px;
             margin: 0 0 20px;
             display: grid;
@@ -149,18 +74,18 @@
         .filter-group label {
             font-size: 13px;
             font-weight: 900;
-            color: var(--main-navy);
+            color: var(--main-color);
             margin-bottom: 8px;
         }
 
         .filter-group select,
         .column-toggle-btn {
             height: 43px;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 0 12px;
-            background: white;
-            color: var(--dark-gray);
+            background: var(--bg-card);
+            color: var(--text-main);
             font-size: 14px;
             text-align: left;
         }
@@ -168,8 +93,8 @@
         .filter-group select:focus,
         .column-toggle-btn:focus {
             outline: none;
-            border-color: var(--point-blue);
-            box-shadow: 0 0 0 3px rgba(123, 116, 214, 0.16);
+            border-color: var(--point-color);
+            box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
         }
 
         .column-toggle-btn {
@@ -183,7 +108,7 @@
         .column-toggle-btn::after {
             content: "▾";
             font-size: 12px;
-            color: var(--muted);
+            color: var(--text-sub);
         }
 
         .column-menu {
@@ -194,11 +119,11 @@
             width: 260px;
             max-height: 330px;
             overflow-y: auto;
-            background: white;
-            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 14px;
             padding: 12px;
-            box-shadow: 0 12px 28px rgba(75, 75, 143, 0.18);
+            box-shadow: var(--shadow-soft);
             z-index: 100;
         }
 
@@ -209,7 +134,7 @@
         .column-menu-title {
             font-size: 12px;
             font-weight: 900;
-            color: var(--main-navy);
+            color: var(--main-color);
             margin-bottom: 10px;
         }
 
@@ -226,12 +151,12 @@
             font-size: 11px;
             font-weight: 800;
             cursor: pointer;
-            background: var(--soft-lavender);
-            color: var(--main-navy);
+            background: rgba(217, 184, 79, 0.18);
+            color: var(--main-color);
         }
 
         .small-btn:hover {
-            background: var(--sub-lavender);
+            background: rgba(217, 184, 79, 0.30);
         }
 
         .column-option {
@@ -241,20 +166,20 @@
             padding: 8px 6px;
             border-radius: 8px;
             font-size: 13px;
-            color: var(--dark-gray);
+            color: var(--text-main);
             cursor: pointer;
         }
 
         .column-option:hover {
-            background: var(--soft-lavender);
+            background: var(--bg-soft);
         }
 
         .column-option input {
-            accent-color: var(--point-blue);
+            accent-color: var(--point-color);
         }
 
         .column-option.fixed {
-            color: var(--muted);
+            color: var(--text-muted);
             cursor: not-allowed;
         }
 
@@ -274,14 +199,14 @@
         }
 
         .result-table thead {
-            background: var(--main-navy);
-            color: white;
+            background: var(--main-color);
+            color: var(--white);
         }
 
         .result-table th,
         .result-table td {
             padding: 14px 12px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--border-color);
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
@@ -291,134 +216,32 @@
             transition: 0.15s ease;
         }
 
-        .result-table tbody tr.row-high {
-            background: var(--danger-row);
-        }
-
-        .result-table tbody tr.row-middle {
-            background: var(--middle-row);
-        }
-
-        .result-table tbody tr.row-normal {
-            background: var(--normal-row);
-        }
-
-        .result-table tbody tr.row-high:hover {
-            background: var(--danger-strong);
-        }
-
-        .result-table tbody tr.row-middle:hover {
-            background: var(--middle-strong);
-        }
-
-        .result-table tbody tr.row-normal:hover {
-            background: var(--normal-strong);
-        }
-
         .result-table th:nth-last-child(1),
         .result-table th:nth-last-child(2) {
-            background: var(--point-blue);
+            background: var(--point-color);
         }
 
         .result-table td:nth-last-child(1),
         .result-table td:nth-last-child(2) {
             font-weight: 900;
-            color: var(--main-navy);
-            background: rgba(184, 181, 232, 0.35);
-        }
-
-        .button-row {
-            margin-top: 22px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .back-link,
-        .patient-link,
-        .shap-link {
-            display: inline-block;
-            text-decoration: none;
-            padding: 12px 18px;
-            border-radius: 11px;
-            font-weight: 900;
-            font-size: 14px;
-            line-height: 1;
-            border: none;
-        }
-
-        .back-link {
-            background: #7B74D6;
-            color: white;
-        }
-
-        .patient-link {
-            background: #B8B5E8;
-            color: #2F2F4F;
-        }
-
-        .shap-link {
-            background: linear-gradient(135deg, #4B4B8F, #7B74D6);
-            color: white;
-            box-shadow: 0 8px 18px rgba(75, 75, 143, 0.22);
-        }
-
-        .back-link:hover,
-        .patient-link:hover,
-        .shap-link:hover {
-            transform: translateY(-1px);
-            opacity: 0.92;
+            color: var(--main-color);
+            background: rgba(217, 184, 79, 0.12);
         }
 
         .probability-cell {
             font-weight: 900;
-            color: var(--point-blue) !important;
-        }
-
-        .risk-badge {
-            display: inline-block;
-            min-width: 64px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            font-weight: 900;
-            font-size: 12px;
-        }
-
-        .risk-badge.high {
-            background: var(--danger-strong);
-            color: var(--danger-text);
-        }
-
-        .risk-badge.middle {
-            background: var(--middle-strong);
-            color: var(--middle-text);
-        }
-
-        .risk-badge.normal {
-            background: var(--normal-strong);
-            color: var(--normal-text);
+            color: var(--point-color) !important;
         }
 
         .empty-message {
             display: none;
             padding: 28px;
             text-align: center;
-            color: var(--muted);
+            color: var(--text-muted);
             font-weight: 800;
         }
 
-        
-
         @media (max-width: 900px) {
-            body {
-                padding: 20px;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
             .filter-card {
                 grid-template-columns: 1fr;
             }
@@ -432,17 +255,6 @@
             .result-table {
                 min-width: 850px;
             }
-
-            .button-row {
-                flex-direction: column;
-            }
-
-            .back-link,
-            .save-link,
-            .patient-link {
-                width: 100%;
-                text-align: center;
-            }
         }
     </style>
 </head>
@@ -455,7 +267,7 @@
         <p>업로드된 환자 정보를 기반으로 30일 이내 재입원 위험도를 예측했습니다.</p>
     </div>
 
-    <div class="summary-grid">
+    <div class="grid-4" style="margin-bottom: 22px;">
         <div class="summary-card">
             <span>전체 환자 수</span>
             <strong>{{ total_count }}</strong>
@@ -545,7 +357,6 @@
     <div class="button-row">
         <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
-        <a href="{% url 'analysis:shap_page' %}" class="shap-link">SHAP 분석 보기</a>
     </div>
 
 </div>
@@ -645,13 +456,13 @@
 
             if (normalizedRisk === "고위험") {
                 row.classList.add("row-high");
-                cells[riskIndex].innerHTML = '<span class="risk-badge high">고위험</span>';
+                cells[riskIndex].innerHTML = '<span class="badge high">고위험</span>';
             } else if (normalizedRisk === "중위험") {
                 row.classList.add("row-middle");
-                cells[riskIndex].innerHTML = '<span class="risk-badge middle">중위험</span>';
+                cells[riskIndex].innerHTML = '<span class="badge middle">중위험</span>';
             } else {
                 row.classList.add("row-normal");
-                cells[riskIndex].innerHTML = '<span class="risk-badge normal">정상</span>';
+                cells[riskIndex].innerHTML = '<span class="badge normal">정상</span>';
             }
 
             const probNumber = getProbabilityNumber(cells[probIndex].innerText);

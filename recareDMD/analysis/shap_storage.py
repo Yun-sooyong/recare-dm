@@ -15,7 +15,10 @@ def save_shap_results(prediction, model_input, explainer=None):
     shap_values = calculate_shap_values(model_input, explainer=explainer)
 
     # model_input이 1행이라는 전제 -> 첫 번째 row만 사용
+    
+
     row_shap = shap_values[0]
+   
 
     shap_objects = [
         ShapResult(
@@ -25,4 +28,6 @@ def save_shap_results(prediction, model_input, explainer=None):
         )
         for feature_name, shap_value in zip(model_input.columns, row_shap)
     ]
+    
     ShapResult.objects.bulk_create(shap_objects)
+    
