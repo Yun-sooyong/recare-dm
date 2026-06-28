@@ -9,7 +9,7 @@
 ```
 RECARE-DM-DASHBOARD/
 ├── recareDMD/          # Django config (settings, urls, wsgi)
-├── dashboard/          # 박겸모 — 대시보드
+├── dashboard/          # 박검모 — 대시보드
 ├── patients/           # 최일운 — 환자 목록 · 상세
 ├── discharge/          # 윤수용 — 퇴원 준비 · 안내 · 재방문 등록
 ├── prediction/         # 서정은 — 위험예측 · 대량예측
@@ -25,23 +25,24 @@ RECARE-DM-DASHBOARD/
 
 ## 👥 역할 분담 & 브랜치
 
-| 이름 | 담당 | 브랜치 |
-|------|------|--------|
-| 박겸모 | 대시보드 | `feature/gyeommo` |
-| 최일운 | 환자관리 1 (목록 CRUD · 상세) | `feature/ilun` |
-| 윤수용 | 환자관리 2 (퇴원 준비 · 안내 · 재방문) | `feature/suyong` |
-| 서정은 | 위험예측 · 대량예측 | `feature/jungeun` |
-| 정다희 | SHAP 분석 | `feature/dahee` |
+| 이름   | 담당                                   | 브랜치            |
+| ------ | -------------------------------------- | ----------------- |
+| 박검모 | 대시보드                               | `feature/geommo`  |
+| 최일운 | 환자관리 1 (목록 CRUD · 상세)          | `feature/ilun`    |
+| 윤수용 | 환자관리 2 (퇴원 준비 · 안내 · 재방문) | `feature/suyong`  |
+| 서정은 | 위험예측 · 대량예측                    | `feature/jungeun` |
+| 정다희 | SHAP 분석                              | `feature/dahee`   |
 
 ---
 
 ## 🔀 브랜치 운영 규칙
 
 ### 브랜치 구조
+
 ```
 main                  ← 최종 발표용 (팀장만 merge)
 └── dev               ← 통합 브랜치 (PR merge 대상)
-    ├── feature/gyeommo
+    ├── feature/geommo
     ├── feature/ilun
     ├── feature/suyong
     ├── feature/jungeun
@@ -49,6 +50,7 @@ main                  ← 최종 발표용 (팀장만 merge)
 ```
 
 ### 작업 흐름
+
 ```bash
 # 1. 최초 1회 — clone 후 본인 브랜치로 이동
 git clone https://github.com/팀저장소/RECARE-DM-DASHBOARD.git
@@ -71,11 +73,13 @@ git push origin feature/본인브랜치
 ### ⚠️ 충돌 방지 주의사항
 
 **다른 사람 PR이 merge된 후 작업 재개할 때**
+
 ```bash
 git pull origin dev   # dev 최신화
 ```
 
 **공유 파일 수정 시 필수 공지**
+
 - `patients/models.py` — discharge 앱이 참조하므로 변경 시 수용에게 바로 알림
 - `templates/base.html` — 전체 영향, 수정 전 팀 전체 공지
 - `recareDMD/settings.py` — 앱 등록 · 경로 변경 시 팀 공지
@@ -95,6 +99,7 @@ chore:    설정 · 패키지 변경
 ```
 
 예시
+
 ```
 feat: 퇴원 준비 페이지 템플릿 작성
 fix: 환자 목록 필터 오류 수정
