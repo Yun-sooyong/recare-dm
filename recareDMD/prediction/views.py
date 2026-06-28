@@ -13,7 +13,8 @@ from django.http import HttpResponse
 from django.utils import timezone
 from patients.models import PersonalInfo, PredictionData as PatientPrediction
 from .models import PredictionData
-
+from analysis.services import single_predict as save_prediction_with_shap
+from analysis.services import bulk_predict as save_bulk_prediction_with_shap
 
 # =========================
 # 모델 로드
@@ -279,11 +280,12 @@ def single_predict(request):
             risk_label = get_risk_label(probability)
             risk_message = get_risk_message(risk_label)
 
-            prediction_data = save_prediction_result_to_db(
-                patient_data=data,
-                probability_percent=probability_percent,
+            prediction_data = save_prediction_with_shap(
+                input_df=input_df,
+                model=model,
+                data=data,
                 risk_label=risk_label,
-            )
+)
 
             input_summary = {
                 '환자명': data.get('name'),
@@ -380,12 +382,12 @@ def bulk_predict(request):
             display_df['위험등급'] = display_df['재입원_확률'].apply(
                 lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
             )
-            for index, row in display_df.iterrows():
-                save_prediction_result_to_db(
-                    patient_data=df.iloc[index].to_dict(),
-                    probability_percent=row['재입원_확률'],
-                    risk_label=row['위험등급'],
-                )
+            dataset = df.to_dict(orient='records')
+
+            save_bulk_prediction_with_shap(
+                dataset=dataset,
+                model=model,
+            )
 
             important_columns = [
                 'name',
@@ -663,12 +665,12 @@ def predict_patient_cart(request):
             lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
         )
 
-        for index, row in display_df.iterrows():
-            save_prediction_result_to_db(
-                patient_data=patient_cart[index],
-                probability_percent=row['재입원_확률'],
-                risk_label=row['위험등급'],
-            )
+        dataset = df.to_dict(orient="records")
+
+        save_bulk_prediction_with_shap(
+            dataset=dataset,
+            model=model,
+        )
 
         important_columns = [
             'name',

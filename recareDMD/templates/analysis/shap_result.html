@@ -1,0 +1,269 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SHAP 분석 결과</title>
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
+    <style>
+      /* shap_result.html 전용 스타일 (common.css에 없는 부분만 추가) */
+
+      .shap-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .shap-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .shap-card-title .icon-risk {
+        color: var(--danger-color);
+        font-weight: 900;
+      }
+      .shap-card-title .icon-protect {
+        color: var(--safe-color);
+        font-weight: 900;
+      }
+
+      .bar-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 130px 1fr 70px;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .bar-label {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bar-track {
+        height: 14px;
+        background: var(--bg-soft);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: var(--radius-pill);
+      }
+
+      .bar-fill-risk {
+        background: var(--danger-color);
+      }
+      .bar-fill-protect {
+        background: var(--safe-color);
+      }
+
+      .bar-value {
+        font-size: 13px;
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .bar-value-risk {
+        color: var(--danger-color);
+      }
+      .bar-value-protect {
+        color: var(--safe-color);
+      }
+
+      .empty-state {
+        color: var(--text-muted);
+        font-size: 13px;
+        text-align: center;
+        padding: 20px 0;
+      }
+
+      .shap-all-results summary {
+        cursor: pointer;
+        font-weight: 800;
+        color: var(--main-color);
+        padding: 14px 18px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-card);
+      }
+
+      .shap-all-results[open] summary {
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        box-shadow: none;
+      }
+
+      .shap-all-results table {
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        background: var(--bg-card);
+      }
+
+      .text-risk {
+        color: var(--danger-color);
+        font-weight: 800;
+      }
+      .text-protect {
+        color: var(--safe-color);
+        font-weight: 800;
+      }
+
+      @media (max-width: 720px) {
+        .shap-grid {
+          grid-template-columns: 1fr;
+        }
+        .bar-row {
+          grid-template-columns: 90px 1fr 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrap">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">SHAP 분석 결과</h1>
+          <p class="page-subtitle">
+            재입원 확률
+            <strong>{{ prediction.readmit_proba|floatformat:1 }}%</strong>
+            · 위험등급
+            <span class="badge {{ prediction.risk_level }}"
+              >{{ prediction.risk_level }}</span
+            >
+          </p>
+        </div>
+      </div>
+
+      <div class="shap-grid">
+        <!-- 위험 요인 카드 -->
+        <div class="card">
+          <div class="shap-card-title">
+            <span class="icon-risk">▲</span>
+            <span class="card-title" style="margin: 0">TOP 위험 요인</span>
+          </div>
+
+          {% if risk_factors %} {% with max_value=risk_factors.0.shap_value %}
+          <div class="bar-list">
+            {% for factor in risk_factors %}
+            <div class="bar-row">
+              <div class="bar-label">{{ factor.feature_name }}</div>
+              <div class="bar-track">
+                <div
+                  class="bar-fill bar-fill-risk"
+                  style="width: {% widthratio factor.shap_value max_value 100 %}%;"
+                ></div>
+              </div>
+              <div class="bar-value bar-value-risk">
+                +{{ factor.shap_value|floatformat:3 }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endwith %} {% else %}
+          <p class="empty-state">위험 요인으로 분류된 feature가 없습니다.</p>
+          {% endif %}
+        </div>
+
+        <!-- 보호 요인 카드 -->
+        <div class="card">
+          <div class="shap-card-title">
+            <span class="icon-protect">▼</span>
+            <span class="card-title" style="margin: 0">TOP 보호 요인</span>
+          </div>
+
+          {% if protective_factors %} 
+            {% with max_value=protective_factors.0.abs_value %}
+            <div class="bar-list">
+              {% for factor in protective_factors %}
+                <div class="bar-row">
+                  <div class="bar-label">{{ factor.feature_name }}</div>
+                  <div class="bar-track">
+                    <div
+                      class="bar-fill bar-fill-protect"
+                      style="width: {% widthratio factor.abs_value max_value 100 %}%;"
+                    ></div>
+                  </div>
+                  <div class="bar-value bar-value-protect">
+                    {{ factor.shap_value|floatformat:3 }}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            {% endwith %} 
+          {% else %}
+            <p class="empty-state">보호 요인으로 분류된 feature가 없습니다.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 전체 41개 feature 표 (접기/펼치기) -->
+      <details class="shap-all-results">
+        <summary>전체 Feature 보기 (절대값 기준 정렬)</summary>
+        <div
+          class="table-wrap"
+          style="
+            border: none;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+          "
+        >
+          <table>
+            <thead>
+              <tr>
+                <th>순위</th>
+                <th>Feature</th>
+                <th>SHAP 값</th>
+                <th>영향</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in all_results %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ result.feature_name }}</td>
+                <td
+                  class="{% if result.shap_value > 0 %}text-risk{% else %}text-protect{% endif %}"
+                >
+                  {{ result.shap_value|floatformat:3 }}
+                </td>
+                <td>
+                  {% if result.shap_value > 0 %}
+                  <span class="badge high">위험↑</span>
+                  {% else %}
+                  <span class="badge normal">위험↓</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <div class="button-row" style="margin-top: 20px">
+        <a href="{% url 'prediction:prediction_page' %}" class="back-link"
+          >다시 예측하기</a
+        >
+        <a href="{% url 'patients:patient_list' %}" class="patient-link"
+          >환자 목록으로 가기</a
+        >
+      </div>
+    </div>
+  </body>
+</html>
