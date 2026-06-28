@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>재방문 예측 결과 — {{ patient.patient_nbr }}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f0f2f5; --c-card: #ffffff; --c-border: #e4e7ec;
+  --c-text: #1a1d23; --c-sub: #6b7280;
+  --c-danger: #e8420a; --c-danger-bg: #fff2ee; --c-danger-bd: #fccdb8;
+  --c-warn: #d97706; --c-warn-bg: #fffbeb; --c-warn-bd: #fcd34d;
+  --c-ok: #059669; --c-ok-bg: #ecfdf5; --c-ok-bd: #6ee7b7;
+  --radius: 10px;
+  --shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+}
+body {
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--c-bg); color: var(--c-text);
+  font-size: 14px; line-height: 1.5; padding: 24px; min-height: 100vh;
+}
+.container { max-width: 640px; margin: 0 auto; }
+
+.breadcrumb { font-size: 13px; color: var(--c-sub); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb a { color: var(--c-sub); text-decoration: none; }
+.breadcrumb a:hover { color: var(--c-text); }
+.breadcrumb .sep { color: #9ca3af; }
+.breadcrumb .cur { color: var(--c-text); font-weight: 500; }
+
+.card {
+  background: var(--c-card); border: 1px solid var(--c-border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--c-sub); margin-bottom: 16px; }
+
+.result-box {
+  text-align: center; padding: 28px; border-radius: 10px; margin-bottom: 16px;
+}
+.result-box.high { background: var(--c-danger-bg); border: 2px solid var(--c-danger-bd); }
+.result-box.medium { background: var(--c-warn-bg); border: 2px solid var(--c-warn-bd); }
+.result-box.low { background: var(--c-ok-bg); border: 2px solid var(--c-ok-bd); }
+.result-box .prob { font-size: 42px; font-weight: 800; line-height: 1; }
+.result-box.high .prob { color: var(--c-danger); }
+.result-box.medium .prob { color: var(--c-warn); }
+.result-box.low .prob { color: var(--c-ok); }
+.result-box .rlabel { font-size: 16px; font-weight: 600; margin-top: 6px; }
+.result-box .rmsg { font-size: 13px; color: var(--c-sub); margin-top: 8px; }
+
+.info-table { width: 100%; border-collapse: collapse; }
+.info-table th { text-align: left; padding: 8px 12px; background: #fafafa; width: 35%; font-size: 13px; font-weight: 600; color: var(--c-sub); }
+.info-table td { padding: 8px 12px; font-size: 13px; }
+.info-table tr + tr th, .info-table tr + tr td { border-top: 1px solid var(--c-border); }
+
+.actions { display: flex; gap: 10px; }
+.btn {
+  flex: 1; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  text-align: center; text-decoration: none; border: none; cursor: pointer;
+}
+.btn-primary { background: #1e2d4a; color: #fff; }
+.btn-primary:hover { background: #162038; }
+.btn-outline { background: transparent; color: var(--c-text); border: 1.5px solid var(--c-border); }
+.btn-outline:hover { background: var(--c-bg); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav class="breadcrumb">
+    <a href="#">환자 목록</a><span class="sep">›</span>
+    <a href="#">{{ patient.patient_nbr }}</a><span class="sep">›</span>
+    <span class="cur">재방문 예측 결과</span>
+  </nav>
+
+  <!-- 예측 결과 -->
+  <div class="card">
+    <div class="card-title">재입원 위험도</div>
+    <div class="result-box {% if risk_label == '고위험' %}high{% elif risk_label == '중위험' %}medium{% else %}low{% endif %}">
+      <div class="prob">{{ probability }}%</div>
+      <div class="rlabel">{{ risk_label }}</div>
+      <div class="rmsg">{{ risk_message }}</div>
+    </div>
+  </div>
+
+  <!-- 환자 정보 -->
+  <div class="card">
+    <div class="card-title">환자 정보</div>
+    <table class="info-table">
+      <tr><th>환자 번호</th><td>{{ patient.patient_nbr }}</td></tr>
+      <tr><th>내원일</th><td>{{ prediction.visit_date }}</td></tr>
+      <tr><th>총 내원 횟수</th><td>{{ patient.visit_count }}회</td></tr>
+    </table>
+  </div>
+
+  <div class="actions">
+    <a href="{% url 'discharge_guide' patient_id=patient.pk %}" class="btn btn-primary">퇴원 안내서로 이동</a>
+    <a href="{% url 'discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">다시 입력</a>
+  </div>
+
+</div>
+</body>
+</html>

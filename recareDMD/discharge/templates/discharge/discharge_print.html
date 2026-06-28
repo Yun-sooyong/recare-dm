@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴원 안내서 출력 — {{ patient.patient_nbr }}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: #1a1d23; font-size: 11px; line-height: 1.45;
+}
+:root {
+  --danger: #e8420a; --danger-bg: #fff2ee; --danger-bd: #fccdb8;
+  --warn: #d97706; --warn-bg: #fffbeb;
+  --ok: #059669; --ok-bg: #ecfdf5;
+  --sub: #6b7280; --border: #d1d5db;
+}
+
+/* A4 용지 */
+.page { width: 210mm; min-height: 297mm; max-height: 297mm; margin: 0 auto; padding: 12mm 14mm 10mm; overflow: hidden; position: relative; }
+
+/* 헤더 */
+.header { text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #333; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.header p { font-size: 9px; color: var(--sub); margin-top: 1px; }
+
+/* 환자 바 */
+.patient-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: 5px; margin-bottom: 8px; font-size: 10px;
+}
+.patient-info { flex: 1; }
+.patient-name { font-size: 12px; font-weight: 600; }
+.patient-name span { font-size: 10px; font-weight: 400; color: var(--sub); }
+.patient-meta { font-size: 9px; color: var(--sub); }
+.stats { display: flex; gap: 12px; align-items: center; }
+.stat { text-align: center; }
+.stat-val { font-size: 14px; font-weight: 700; }
+.stat-val.d { color: var(--danger); }
+.stat-val.o { color: var(--ok); }
+.stat-lbl { font-size: 8px; color: var(--sub); }
+.badge { padding: 2px 7px; border-radius: 8px; font-size: 9px; font-weight: 600; }
+.badge.high { background: #fee2e2; color: #b91c1c; }
+.badge.medium { background: var(--warn-bg); color: var(--warn); }
+.badge.low { background: var(--ok-bg); color: var(--ok); }
+
+/* 2열 그리드 */
+.grid2 { display: grid; grid-template-columns: 160px 1fr; gap: 8px; margin-bottom: 8px; }
+
+/* 카드 */
+.card { border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
+.card-t { font-size: 9px; font-weight: 600; color: var(--sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+
+/* 게이지 */
+.sc { text-align: center; }
+.gw { width: 110px; height: 62px; margin: 0 auto 4px; }
+.gw svg { width: 100%; height: 100%; overflow: visible; }
+.slbl { display: inline-block; padding: 1px 8px; border-radius: 8px; font-size: 9px; font-weight: 600; margin-bottom: 6px; }
+.slbl.d { background: var(--danger-bg); color: var(--danger); }
+.slbl.w { background: var(--warn-bg); color: var(--warn); }
+.slbl.o { background: var(--ok-bg); color: var(--ok); }
+
+/* 위험요인 */
+.rf { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 10px; }
+.rf-r { width: 14px; height: 14px; border-radius: 50%; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rf-r.r1 { background: #fef3c7; color: #92400e; }
+.rf-r.r2 { background: #e0e7ff; color: #3730a3; }
+.rf-r.r3 { background: #f3e8ff; color: #6b21a8; }
+.rf-bar { width: 50px; height: 4px; background: #e5e7eb; border-radius: 2px; }
+.rf-fill { height: 100%; border-radius: 2px; background: var(--danger); }
+.rf-v { font-size: 9px; font-weight: 700; color: var(--danger); min-width: 30px; text-align: right; }
+
+/* 평가 항목 */
+.ev { padding: 4px 0; border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.ev:last-child { border-bottom: none; }
+.ev-icon { font-size: 10px; }
+.ev-name { font-size: 10px; font-weight: 600; flex: 1; }
+.ev-st { font-size: 8px; font-weight: 600; padding: 1px 4px; border-radius: 3px; }
+.ev-st.d { background: var(--danger-bg); color: var(--danger); }
+.ev-st.o { background: var(--ok-bg); color: var(--ok); }
+.ev-sc { font-size: 10px; font-weight: 700; }
+.ev-sc.d { color: var(--danger); }
+.ev-sc.o { color: var(--ok); }
+.ev-bar { width: 100%; height: 3px; background: #e5e7eb; border-radius: 2px; }
+.ev-fill { height: 100%; border-radius: 2px; }
+.ev-desc { width: 100%; font-size: 9px; color: var(--sub); }
+
+/* 체크리스트 */
+.cl2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.cl-gt { font-size: 9px; font-weight: 600; color: var(--sub); margin: 4px 0 2px; border-left: 2px solid var(--border); padding-left: 5px; }
+.cl-i { display: flex; align-items: center; gap: 4px; padding: 2px 0; font-size: 9px; }
+.cl-i::before { content: '☐'; font-size: 10px; flex-shrink: 0; }
+.cl-tg { font-size: 8px; font-weight: 600; padding: 0 3px; border-radius: 2px; flex-shrink: 0; }
+.cl-tg.r { background: var(--danger-bg); color: var(--danger); }
+.cl-tg.c { background: var(--warn-bg); color: var(--warn); }
+
+/* 권고 */
+.reco { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.reco-i { padding: 5px 6px; border-radius: 4px; background: var(--danger-bg); border: 1px solid var(--danger-bd); font-size: 9px; }
+.reco-t { font-weight: 700; color: var(--danger); margin-bottom: 1px; }
+.reco-d { color: var(--sub); }
+
+.footer { position: absolute; bottom: 8mm; left: 14mm; right: 14mm; text-align: center; font-size: 8px; color: #aaa; border-top: 1px solid #ddd; padding-top: 4px; }
+
+/* 화면 미리보기 */
+.no-print { padding: 10px 16px; background: #f0f2f5; }
+@media screen { body { background: #ddd; } .page { background: #fff; box-shadow: 0 0 10px rgba(0,0,0,.15); } }
+@media print {
+  .no-print { display: none; }
+  @page { size: A4; margin: 0; }
+  .page { padding: 10mm 12mm; width: 100%; min-height: auto; max-height: auto; }
+  .footer { position: fixed; bottom: 6mm; left: 12mm; right: 12mm; }
+}
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()" style="padding:6px 16px;background:#1e2d4a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;margin-right:6px;">인쇄</button>
+  <button onclick="savePdf()" style="padding:6px 16px;background:#1e2d4a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;margin-right:6px;">PDF 저장</button>
+  <a href="{% url 'discharge_guide' patient_id=patient.pk %}" style="padding:6px 16px;background:#6b7280;color:#fff;border-radius:5px;text-decoration:none;font-size:12px;">돌아가기</a>
+</div>
+
+<div class="page">
+
+  <div class="header">
+    <h1>퇴원 안내서</h1>
+    <p>ReCare DM Dashboard</p>
+  </div>
+
+  <!-- 환자 바 -->
+  <div class="patient-bar">
+    <div class="patient-info">
+      <div class="patient-name">{{ patient.patient_nbr }} <span>PT-{{ patient.pk|stringformat:"06d" }} · {{ patient.visit_count }}차 내원</span></div>
+      <div class="patient-meta">
+        {% if prediction %}{{ prediction.gender }} · {{ prediction.age }} · {{ prediction.race }} · 내원일 {{ prediction.visit_date }}{% endif %}
+        {% if record %} · 퇴원 예정일 {{ record.discharge_date }}{% endif %}
+      </div>
+    </div>
+    {% if readiness %}
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val {% if readiness.total < 60 %}d{% else %}o{% endif %}">{{ readiness.total }}</div>
+        <div class="stat-lbl">준비도</div>
+      </div>
+      {% if prediction.readmit_proba %}
+      <div class="stat">
+        <div class="stat-val d">{{ prediction.readmit_proba|floatformat:1 }}%</div>
+        <div class="stat-lbl">재입원 위험도</div>
+      </div>
+      {% endif %}
+      {% if prediction.risk_level %}
+      <span class="badge {% if prediction.risk_level == '고위험' %}high{% elif prediction.risk_level == '중위험' %}medium{% else %}low{% endif %}">{{ prediction.risk_level }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if readiness %}
+  <!-- 2열: 점수 + 평가 -->
+  <div class="grid2">
+
+    <!-- 좌: 점수 + 위험요인 -->
+    <div class="card sc">
+      <div class="card-t">퇴원 준비도</div>
+      <div class="gw">
+        <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10,90 A70,70 0 0,1 150,90" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/>
+          <path d="M10,90 A70,70 0 0,1 150,90" fill="none"
+                stroke="{% if readiness.total < 60 %}#e8420a{% elif readiness.total < 80 %}#d97706{% else %}#059669{% endif %}"
+                stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="{{ readiness.gauge_fill }} 220" stroke-dashoffset="0"/>
+          <text x="80" y="74" text-anchor="middle" font-size="22" font-weight="800"
+                fill="{% if readiness.total < 60 %}#e8420a{% elif readiness.total < 80 %}#d97706{% else %}#059669{% endif %}">{{ readiness.total }}</text>
+          <text x="80" y="86" text-anchor="middle" font-size="9" fill="#9ca3af">/100점</text>
+        </svg>
+      </div>
+      <div class="slbl {% if readiness.total < 60 %}d{% elif readiness.total < 80 %}w{% else %}o{% endif %}">{{ readiness.label }}</div>
+
+      {% if readiness.risk_factors %}
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+        <div class="card-t" style="margin-bottom:4px;">주요 위험 요인</div>
+        {% for rf in readiness.risk_factors %}
+        <div class="rf">
+          <span class="rf-r r{{ forloop.counter }}">{{ forloop.counter }}</span>
+          <span style="flex:1;">{{ rf.name }}</span>
+          <div class="rf-bar"><div class="rf-fill" style="width:{{ rf.bar_pct }}%;"></div></div>
+          <span class="rf-v">+{{ rf.impact }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 우: 항목별 평가 -->
+    <div class="card">
+      <div class="card-t">항목별 평가</div>
+      {% for item in readiness.items %}
+      <div class="ev">
+        <span class="ev-icon">{{ item.icon }}</span>
+        <span class="ev-name">{{ item.name }}</span>
+        <span class="ev-st {% if item.score < 14 %}d{% else %}o{% endif %}">{% if item.score < 14 %}위험{% else %}양호{% endif %}</span>
+        <span class="ev-sc {% if item.score < 14 %}d{% else %}o{% endif %}">{{ item.score }}/20</span>
+        <div class="ev-bar"><div class="ev-fill" style="width:{% widthratio item.score 20 100 %}%;background:{% if item.score < 14 %}#e8420a{% else %}#059669{% endif %};"></div></div>
+        <div class="ev-desc">{{ item.desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- 체크리스트 -->
+  <div class="card" style="margin-bottom:6px;">
+    <div class="card-t">퇴원 후 행동 지침 체크리스트</div>
+    <div class="cl2">
+      <div>
+        <div class="cl-gt">외래 연계</div>
+        <div class="cl-i"><span>퇴원 후 7일 이내 외래 방문 예약 확인</span><span class="cl-tg r">필수</span></div>
+        <div class="cl-gt">기본 안내</div>
+        <div class="cl-i"><span>처방전 및 복용 약물 목록 수령 확인</span><span class="cl-tg r">필수</span></div>
+        <div class="cl-i"><span>식이요법 및 운동 지침 수령</span><span class="cl-tg c">권장</span></div>
+        <div class="cl-gt">약물 관리</div>
+        <div class="cl-i"><span>인슐린 주사 방법 및 혈당 측정 교육</span><span class="cl-tg r">필수</span></div>
+        <div class="cl-i"><span>인슐린 보관 방법 및 주사 부위 교육</span><span class="cl-tg c">권장</span></div>
+      </div>
+      <div>
+        <div class="cl-gt">응급 대처</div>
+        <div class="cl-i"><span>저혈당·고혈당 응급 증상 인지 및 대처 교육</span><span class="cl-tg r">필수</span></div>
+        <div class="cl-i"><span>응급 연락처 카드 제공</span><span class="cl-tg c">권장</span></div>
+        <div class="cl-gt">추적 관찰</div>
+        <div class="cl-i"><span>이전 입원 원인 재발 예방 계획 안내</span><span class="cl-tg r">필수</span></div>
+        <div class="cl-i"><span>퇴원 후 1주일 이내 전화 상담 예약</span><span class="cl-tg c">권장</span></div>
+        <div class="cl-gt">지역 연계</div>
+        <div class="cl-i"><span>지역사회 당뇨 관리 프로그램 안내</span><span class="cl-tg c">권장</span></div>
+        <div class="cl-i"><span>가족 교육 자료 제공</span><span class="cl-tg c">권장</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 권고사항 -->
+  {% if readiness.risk_factors %}
+  <div class="card">
+    <div class="card-t">개선 권고사항</div>
+    <div class="reco">
+      {% for rf in readiness.risk_factors %}
+      <div class="reco-i">
+        <div class="reco-t">{{ rf.icon }} {{ rf.name }}</div>
+        <div class="reco-d">{{ rf.desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="footer">본 문서는 ReCare DM Dashboard에서 자동 생성되었습니다.</div>
+
+</div>
+
+<script>
+function savePdf() {
+  document.title = '퇴원안내서_{{ patient.patient_nbr }}';
+  window.print();
+}
+</script>
+</body>
+</html>
