@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def discharge_page(request):
+    return render(request, 'discharge/discharge_page.html')
