@@ -5,7 +5,7 @@ from django.db.models import Count, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import PatientForm
-from .models import MEDICATION_FIELDS, Patient, PredictionData
+from .models import MEDICATION_FIELDS, PersonalInfo, PredictionData
 from .preprocessing import group_by_icd9
 
 PAGE_SIZE = 20
@@ -17,7 +17,7 @@ def patient_list(request):
     latest = PredictionData.objects.filter(patient=OuterRef("pk")).order_by(
         "-visit_date", "-encounter_id"
     )
-    patients = Patient.objects.annotate(
+    patients = PersonalInfo.objects.annotate(
         n_visits=Count("predictions", distinct=True),
         last_visit=Max("predictions__visit_date"),
         latest_age=Subquery(latest.values("age")[:1]),
@@ -50,7 +50,7 @@ def patient_create(request):
 
 
 def patient_update(request, pk):
-    patient = get_object_or_404(Patient, pk=pk)
+    patient = get_object_or_404(PersonalInfo, pk=pk)
     form = PatientForm(request.POST or None, instance=patient)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -63,7 +63,7 @@ def patient_update(request, pk):
 
 
 def patient_delete(request, pk):
-    patient = get_object_or_404(Patient, pk=pk)
+    patient = get_object_or_404(PersonalInfo, pk=pk)
     if request.method == "POST":
         patient.delete()
         return redirect("patients:patient_list")
@@ -145,7 +145,7 @@ def _build_chart(timeline):
 
 
 def patient_detail(request, pk):
-    patient = get_object_or_404(Patient, pk=pk)
+    patient = get_object_or_404(PersonalInfo, pk=pk)
     # 시간순 1회 조회. visit_seq property 반복 호출(N+1) 회피 위해 enumerate 로 차수 부여.
     encounters = list(patient.predictions.order_by("visit_date", "encounter_id"))
 

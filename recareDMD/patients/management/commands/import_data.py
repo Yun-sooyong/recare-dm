@@ -5,7 +5,7 @@ import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from patients.models import Patient, PredictionData, MEDICATION_FIELDS
+from patients.models import PersonalInfo, PredictionData, MEDICATION_FIELDS
 from patients.preprocessing import MEDICATION_DB_TO_FEATURE
 
 SEED = 42
@@ -39,13 +39,13 @@ def _to_char(v):
 
 
 class Command(BaseCommand):
-    help = "diabetic_data.csv 정제·샘플링 후 Patient/PredictionData 적재. number_* 원본값 보존."
+    help = "diabetic_data.csv 정제·샘플링 후 PersonalInfo/PredictionData 적재. number_* 원본값 보존."
 
     def add_arguments(self, parser):
         parser.add_argument("csv_path", help="원본 diabetic_data.csv 경로")
         parser.add_argument("--patients", type=int, default=250, help="목표 환자 수")
         parser.add_argument("--encounters", type=int, default=500, help="목표 내원 수")
-        parser.add_argument("--clear", action="store_true", help="적재 전 Patient/PredictionData 전체 삭제")
+        parser.add_argument("--clear", action="store_true", help="적재 전 PersonalInfo/PredictionData 전체 삭제")
 
     def handle(self, *args, **opts):
         path = opts["csv_path"]
@@ -60,7 +60,7 @@ class Command(BaseCommand):
         visit_dates = self._assign_visit_dates(sample)
 
         if opts["clear"]:
-            Patient.objects.all().delete()
+            PersonalInfo.objects.all().delete()
 
         self._load(sample, visit_dates)
         self._report(sample)
@@ -125,7 +125,7 @@ class Command(BaseCommand):
     def _load(self, sample, visit_dates):
         with transaction.atomic():
             for _, row in sample.iterrows():
-                patient, _new = Patient.objects.get_or_create(
+                patient, _new = PersonalInfo.objects.get_or_create(
                     patient_nbr=int(row["patient_nbr"])
                 )
                 enc_id = int(row["encounter_id"])
@@ -150,12 +150,12 @@ class Command(BaseCommand):
                 PredictionData.objects.create(**fields)
 
     def _report(self, sample):
-        total_p = Patient.objects.count()
+        total_p = PersonalInfo.objects.count()
         total_e = PredictionData.objects.count()
         from django.db.models import Count
 
         multi_p = (
-            Patient.objects.annotate(n=Count("predictions"))
+            PersonalInfo.objects.annotate(n=Count("predictions"))
             .filter(n__gte=2)
             .count()
         )
@@ -163,7 +163,7 @@ class Command(BaseCommand):
         inpatient_gt0 = PredictionData.objects.filter(number_inpatient__gt=0).count()
 
         self.stdout.write(self.style.SUCCESS("=== 적재 완료 ==="))
-        self.stdout.write(f"Patient 수: {total_p}")
+        self.stdout.write(f"PersonalInfo 수: {total_p}")
         self.stdout.write(f"PredictionData(내원) 수: {total_e}")
         self.stdout.write(f"내원 2회 이상 환자 수: {multi_p}")
         if total_e:

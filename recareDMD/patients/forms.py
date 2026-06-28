@@ -1,11 +1,11 @@
 from django import forms
 
-from .models import Patient
+from .models import PersonalInfo
 
 
 class PatientForm(forms.ModelForm):
     class Meta:
-        model = Patient
+        model = PersonalInfo
         fields = ["patient_nbr"]
         labels = {"patient_nbr": "환자코드"}
         widgets = {
