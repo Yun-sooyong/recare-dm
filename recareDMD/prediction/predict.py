@@ -7,7 +7,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-from .models import PredictionData
+from patients.models import PredictionData
 
 
 # =========================
