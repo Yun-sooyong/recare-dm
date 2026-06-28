@@ -28,7 +28,6 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
     <div class="content-card chart-card">
       <div class="card-head">
         <h2 class="card-title">내원별 30일 재입원 위험도 추이</h2>
-        <span class="demo-tag">데모 위험도 (예측 모델 미연결)</span>
       </div>
 
       {% if chart %}
@@ -54,8 +53,7 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
         {% endfor %}
       </svg>
       <p class="chart-foot muted">
-        ※ 위 위험도는 예측 모델이 연결되기 전까지 보여주는 <strong>임시 데모 값</strong>입니다.
-        실제 예측값이 아닙니다.
+        ※ 예측 모델(LightGBM) 기반 30일 재입원 위험도입니다.
       </p>
       {% elif single_visit %}
       <div class="empty-state">
@@ -72,9 +70,25 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
       <a class="btn btn-purple" href="{% url 'patients:patient_update' patient.pk %}">환자 수정</a>
       <a class="btn btn-danger" href="{% url 'patients:patient_delete' patient.pk %}">환자 삭제</a>
       {# 이동맵 외부 연결(SHAP 분석·퇴원 안내·재방문 등록)은 담당 URL 미정 → 비활성 placeholder #}
-      <span class="btn btn-disabled" aria-disabled="true" title="담당 페이지 준비 중">SHAP 분석 (준비 중)</span>
-      <span class="btn btn-disabled" aria-disabled="true" title="담당 페이지 준비 중">퇴원 안내 (준비 중)</span>
     </div>
+
+    <!-- SHAP TOP 3 위험 요인 -->
+    {% if shap_top3 %}
+    <div class="content-card">
+      <div class="card-head">
+        <h2 class="card-title">주요 위험 요인 (SHAP TOP 3)</h2>
+      </div>
+      <div class="shap-list" style="display:flex;flex-direction:column;gap:8px;padding:12px;">
+        {% for s in shap_top3 %}
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="width:22px;height:22px;border-radius:50%;background:{% if forloop.counter == 1 %}#fef3c7{% elif forloop.counter == 2 %}#e0e7ff{% else %}#f3e8ff{% endif %};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{% if forloop.counter == 1 %}#92400e{% elif forloop.counter == 2 %}#3730a3{% else %}#6b21a8{% endif %};">{{ forloop.counter }}</span>
+          <span style="flex:1;font-size:14px;">{{ s.name }}</span>
+          <span style="font-size:13px;font-weight:700;color:#e8420a;">+{{ s.value }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- 내원 이력 카드 (시간순) -->
     {% for r in rows %}
@@ -85,7 +99,11 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
           <span class="visit-date">{{ r.e.visit_date|date:"Y-m-d" }}</span>
           {% if r.e.is_inpatient %}<span class="tag tag-inpatient">입원</span>{% endif %}
         </div>
-        <span class="risk-chip">데모 위험도 {{ r.risk }}%</span>
+        {% if r.risk is not None %}
+        <span class="risk-chip">위험도 {{ r.risk }}% {% if r.risk_level %}({{ r.risk_level }}){% endif %}</span>
+        {% else %}
+        <span class="risk-chip" style="opacity:0.5;">미예측</span>
+        {% endif %}
       </div>
 
       <div class="info-grid">
