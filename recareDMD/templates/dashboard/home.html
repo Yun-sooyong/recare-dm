@@ -73,9 +73,9 @@
 <!-- 사이드바 -->
 <nav class="sidebar">
   <div class="sidebar-logo">🏥 ReCare DM</div>
-  <a href="/" class="active">대시보드</a>
-  <a href="#">환자 목록</a>
-  <a href="#">퇴원 안내서</a>
+  <a href="{% url 'patients:patient_list' %}">환자 목록</a>
+  <a href="{% url 'prediction:prediction_page' %}">새 환자 예측</a>
+  <a href="{% url 'patients:patient_list' %}">퇴원 안내서</a>
 </nav>
 
 <!-- 본문 -->
@@ -121,11 +121,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">
-              데이터 없음
-            </td>
-          </tr>
+        {% for p in high_patients %}
+        <tr>
+          <td>{{ p.patient.patient_nbr }}</td>
+          <td>{{ p.age }}</td>
+          <td>{{ p.diag_1 }}</td>
+          <td>{{ p.readmit_proba|floatformat:1 }}%</td>
+          <td><span style="color:#DC2626;">고위험</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">데이터 없음</td></tr>
+        {% endfor %}
         </tbody>
       </table>
     </div>
@@ -163,21 +169,21 @@
 
   <!-- 빠른 링크 -->
   <div class="quick-grid">
-    <a href="#" class="quick-card">
+    <a href="{% url 'prediction:prediction_page' %}" class="quick-card">
       <div class="quick-icon" style="background:#EFF6FF;">👤</div>
       <div>
         <div style="font-weight:700; font-size:.88rem;">새 환자 예측</div>
         <div style="font-size:.75rem; color:#94A3B8;">개별 입력 / CSV 대량</div>
       </div>
     </a>
-    <a href="#" class="quick-card">
+    <a href="{% url 'patients:patient_list' %}" class="quick-card">
       <div class="quick-icon" style="background:#F0FDF4;">👥</div>
       <div>
         <div style="font-weight:700; font-size:.88rem;">환자 목록</div>
         <div style="font-size:.75rem; color:#94A3B8;">전체 환자 조회·관리</div>
       </div>
     </a>
-    <a href="#" class="quick-card">
+    <a href="{% url 'patients:patient_list' %}" class="quick-card">
       <div class="quick-icon" style="background:#ECFDF5;">📋</div>
       <div>
         <div style="font-weight:700; font-size:.88rem;">퇴원 안내서</div>
