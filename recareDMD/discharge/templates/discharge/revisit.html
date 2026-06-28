@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>재방문 등록 - 환자 {{ patient.patient_nbr }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; padding: 32px; }
+        .container { max-width: 860px; margin: 0 auto; }
+        h1 { font-size: 1.6rem; margin-bottom: 8px; }
+        .sub { color: #666; margin-bottom: 24px; }
+
+        .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; border-bottom: 2px solid #4a90d9; padding-bottom: 8px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+        .form-control { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
+        select.form-control { height: 34px; }
+
+        .btn { padding: 10px 24px; border: none; border-radius: 4px; font-size: 0.95rem; cursor: pointer; }
+        .btn-primary { background: #4a90d9; color: #fff; }
+        .btn-primary:hover { background: #357abd; }
+        .btn-secondary { background: #6c757d; color: #fff; text-decoration: none; display: inline-block; }
+        .actions { display: flex; gap: 12px; margin-top: 16px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>재방문 등록</h1>
+    <p class="sub">환자 번호: {{ patient.patient_nbr }} | 이전 방문 데이터를 기반으로 수정 후 재예측합니다.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- 기본 정보 -->
+        <div class="card">
+            <h2>기본 정보</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>인종</label>
+                    <select name="race" class="form-control">
+                        <option value="Caucasian" {% if prev.race == 'Caucasian' %}selected{% endif %}>Caucasian</option>
+                        <option value="AfricanAmerican" {% if prev.race == 'AfricanAmerican' %}selected{% endif %}>AfricanAmerican</option>
+                        <option value="Asian" {% if prev.race == 'Asian' %}selected{% endif %}>Asian</option>
+                        <option value="Hispanic" {% if prev.race == 'Hispanic' %}selected{% endif %}>Hispanic</option>
+                        <option value="Other" {% if prev.race == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>성별</label>
+                    <select name="gender" class="form-control">
+                        <option value="Male" {% if prev.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if prev.gender == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>나이</label>
+                    <input type="number" name="age" class="form-control" value="{{ prev.age|default:'65' }}" min="0" max="120">
+                </div>
+                <div class="form-group">
+                    <label>퇴원 배치 ID</label>
+                    <input type="number" name="discharge_disposition_id" class="form-control" value="{{ prev.discharge_disposition_id|default:'1' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- 입원 / 진료 정보 -->
+        <div class="card">
+            <h2>입원 / 진료 정보</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>입원 기간 (일)</label>
+                    <input type="number" name="time_in_hospital" class="form-control" value="{{ prev.time_in_hospital|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>검사 횟수</label>
+                    <input type="number" name="num_lab_procedures" class="form-control" value="{{ prev.num_lab_procedures|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>시술 횟수</label>
+                    <input type="number" name="num_procedures" class="form-control" value="{{ prev.num_procedures|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>투약 수</label>
+                    <input type="number" name="num_medications" class="form-control" value="{{ prev.num_medications|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>최근 외래 방문</label>
+                    <input type="number" name="number_outpatient" class="form-control" value="{{ prev.number_outpatient|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>최근 응급 방문</label>
+                    <input type="number" name="number_emergency" class="form-control" value="{{ prev.number_emergency|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>최근 입원 횟수</label>
+                    <input type="number" name="number_inpatient" class="form-control" value="{{ prev.number_inpatient|default:'0' }}" min="0">
+                </div>
+                <div class="form-group">
+                    <label>진단 개수</label>
+                    <input type="number" name="number_diagnoses" class="form-control" value="{{ prev.number_diagnoses|default:'0' }}" min="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- 진단 / 검사 결과 -->
+        <div class="card">
+            <h2>진단 / 검사 결과</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>주진단 (diag_1)</label>
+                    <input type="text" name="diag_1" class="form-control" value="{{ prev.diag_1|default:'Circulatory' }}">
+                </div>
+                <div class="form-group">
+                    <label>부진단 (diag_2)</label>
+                    <input type="text" name="diag_2" class="form-control" value="{{ prev.diag_2|default:'Diabetes' }}">
+                </div>
+                <div class="form-group">
+                    <label>부진단 (diag_3)</label>
+                    <input type="text" name="diag_3" class="form-control" value="{{ prev.diag_3|default:'Other' }}">
+                </div>
+                <div class="form-group">
+                    <label>혈당 검사</label>
+                    <select name="max_glu_serum" class="form-control">
+                        <option value="None" {% if prev.max_glu_serum == 'None' %}selected{% endif %}>None</option>
+                        <option value=">200" {% if prev.max_glu_serum == '>200' %}selected{% endif %}>>200</option>
+                        <option value=">300" {% if prev.max_glu_serum == '>300' %}selected{% endif %}>>300</option>
+                        <option value="Norm" {% if prev.max_glu_serum == 'Norm' %}selected{% endif %}>Norm</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>A1C 결과</label>
+                    <select name="A1Cresult" class="form-control">
+                        <option value="None" {% if prev.A1Cresult == 'None' %}selected{% endif %}>None</option>
+                        <option value=">7" {% if prev.A1Cresult == '>7' %}selected{% endif %}>>7</option>
+                        <option value=">8" {% if prev.A1Cresult == '>8' %}selected{% endif %}>>8</option>
+                        <option value="Norm" {% if prev.A1Cresult == 'Norm' %}selected{% endif %}>Norm</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 투약 정보 -->
+        <div class="card">
+            <h2>투약 정보</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>metformin</label>
+                    <select name="metformin" class="form-control">
+                        <option value="No" {% if prev.metformin == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.metformin == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.metformin == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.metformin == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>insulin</label>
+                    <select name="insulin" class="form-control">
+                        <option value="No" {% if prev.insulin == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.insulin == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.insulin == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.insulin == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>glipizide</label>
+                    <select name="glipizide" class="form-control">
+                        <option value="No" {% if prev.glipizide == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.glipizide == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.glipizide == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.glipizide == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>glyburide</label>
+                    <select name="glyburide" class="form-control">
+                        <option value="No" {% if prev.glyburide == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.glyburide == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.glyburide == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.glyburide == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>pioglitazone</label>
+                    <select name="pioglitazone" class="form-control">
+                        <option value="No" {% if prev.pioglitazone == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.pioglitazone == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.pioglitazone == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.pioglitazone == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>rosiglitazone</label>
+                    <select name="rosiglitazone" class="form-control">
+                        <option value="No" {% if prev.rosiglitazone == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.rosiglitazone == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.rosiglitazone == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.rosiglitazone == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>acarbose</label>
+                    <select name="acarbose" class="form-control">
+                        <option value="No" {% if prev.acarbose == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.acarbose == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.acarbose == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.acarbose == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>glimepiride</label>
+                    <select name="glimepiride" class="form-control">
+                        <option value="No" {% if prev.glimepiride == 'No' %}selected{% endif %}>No</option>
+                        <option value="Steady" {% if prev.glimepiride == 'Steady' %}selected{% endif %}>Steady</option>
+                        <option value="Up" {% if prev.glimepiride == 'Up' %}selected{% endif %}>Up</option>
+                        <option value="Down" {% if prev.glimepiride == 'Down' %}selected{% endif %}>Down</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>당뇨약 변경 (change)</label>
+                    <select name="change" class="form-control">
+                        <option value="No" {% if prev.change == 'No' %}selected{% endif %}>No</option>
+                        <option value="Ch" {% if prev.change == 'Ch' %}selected{% endif %}>Ch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>당뇨약 처방 여부</label>
+                    <select name="diabetesMed" class="form-control">
+                        <option value="No" {% if prev.diabetesMed == 'No' %}selected{% endif %}>No</option>
+                        <option value="Yes" {% if prev.diabetesMed == 'Yes' %}selected{% endif %}>Yes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">재예측 실행</button>
+            <a href="{% url 'discharge_guide' patient_id=patient.pk %}" class="btn btn-secondary">취소</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>
