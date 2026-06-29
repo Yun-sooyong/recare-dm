@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+{% load static %}
+>>>>>>> Stashed changes
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -341,6 +345,7 @@
             </div>
         </div>
 
+<<<<<<< Updated upstream
     </div>
 
     <div class="button-row">
@@ -348,6 +353,17 @@
         <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
         <a href="{% url 'analysis:shap_page' %}" class="shap-link">SHAP 분석 보기</a>
+=======
+      <div class="button-row">
+        <a href="/" class="home-link">메인으로 가기</a>
+        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+        <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+
+      {% if prediction_data and prediction_data.id %}
+        <a href="{% url 'analysis:shap_result' prediction_data.id %}" class="shap-link">SHAP 분석 보기</a>
+      {% endif %}
+      </div>
+>>>>>>> Stashed changes
     </div>
 
 </div>
