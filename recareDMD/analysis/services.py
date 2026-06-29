@@ -64,12 +64,11 @@ def bulk_predict(dataset, model):
             else:
                 risk_label = "저위험"
 
-            with transaction.atomic():
-                prediction_data = save_prediction_result_to_db(
-                    patient_data=data,
-                    probability_percent=probability_percent,
-                    risk_label=risk_label,
-                )
+            prediction_data = save_prediction_result_to_db(
+                patient_data=data,
+                probability_percent=probability_percent,
+                risk_label=risk_label,
+            )
 
             try:
                 save_shap_results(
