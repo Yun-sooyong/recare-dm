@@ -117,13 +117,14 @@
       <table>
         <thead>
           <tr>
-            <th>환자명</th><th>연령대</th><th>진단군</th><th>위험도</th><th>등급</th>
+            <th>환자코드</th><th>환자명</th><th>연령</th><th>진단군</th><th>위험률</th><th>등급</th>
           </tr>
         </thead>
       <tbody>
       {% for p in high_patients %}
       <tr>
         <td>{{ p.patient.patient_nbr }}</td>
+        <td>{{ p.patient.patient_name }}</td>
         <td>{{ p.age }}</td>
         <td>{{ p.diag_1 }}</td>
         <td>{{ p.readmit_proba|floatformat:1 }}%</td>
@@ -158,17 +159,17 @@
         </tr>
       </thead>
       <tbody>
-      {% for p in recent %}
-      <tr>
-        <td>{{ p.encounter_id }}</td>
-        <td>{{ p.patient.patient_nbr }}</td>
-        <td>{{ p.risk_level }}</td>
-        <td>{{ p.time_in_hospital }}일</td>
-        <td>{{ p.predicted_at|date:"Y-m-d H:i" }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">데이터 없음</td></tr>
-      {% endfor %}
+    {% for p in recent %}
+    <tr>
+      <td>{{ p.patient.patient_nbr }}</td>
+      <td>{{ p.patient.patient_name }}</td>
+      <td>{{ p.risk_level }}</td>
+      <td>{{ p.time_in_hospital }}일</td>
+      <td>{{ p.predicted_at|date:"Y-m-d H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">데이터 없음</td></tr>
+    {% endfor %}
       </tbody>
     </table>
   </div>

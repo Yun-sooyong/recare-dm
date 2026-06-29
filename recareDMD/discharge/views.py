@@ -237,7 +237,7 @@ def revisit(request, patient_id):
             is_inpatient=True,
             race=data['race'],
             gender=data['gender'],
-            age=raw_age,
+            age=data['age'],
             time_in_hospital=data['time_in_hospital'],
             num_lab_procedures=data['num_lab_procedures'],
             num_procedures=data['num_procedures'],
