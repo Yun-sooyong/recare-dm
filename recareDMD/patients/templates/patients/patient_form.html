@@ -1,38 +1,126 @@
+{% extends 'base.html' %}
 {% load static %}
-{# TODO: base.html 완성 시 extends 로 전환. 현재 자립형. #}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if mode == "create" %}환자 추가{% else %}환자 수정{% endif %}</title>
-  <link rel="stylesheet" href="{% static 'css/patients.css' %}">
-</head>
-<body>
-  <header class="page-header">
-    <h1>{% if mode == "create" %}환자 추가{% else %}환자 수정{% endif %}</h1>
-    <div class="subtitle">환자코드만 등록합니다 · 임상 입력은 예측 화면에서</div>
-  </header>
 
-  <main class="page-body">
-    <div class="content-card form-card">
-      <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
+{% block title %}
+  {% if mode == "create" %}환자 추가{% else %}환자 수정{% endif %}
+{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/patients.css' %}">
+<style>
+  .patient-page-header {
+    margin-bottom: 22px;
+  }
+
+  .patient-page-header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: #1E2530;
+    margin-bottom: 6px;
+  }
+
+  .patient-page-header .subtitle {
+    color: #64748B;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .page-body {
+    width: 100%;
+  }
+
+  .content-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    padding: 22px;
+  }
+
+  .form-card {
+    max-width: 680px;
+  }
+
+  .form-row {
+    margin-bottom: 18px;
+  }
+
+  .form-row label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1E2530;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .form-row input,
+  .form-row select,
+  .form-row textarea {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #D8DEE8;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 14px;
+    background: #FFFDF8;
+    color: #111827;
+  }
+
+  .form-row textarea {
+    height: auto;
+    min-height: 100px;
+    padding: 12px;
+  }
+
+  .form-row input:focus,
+  .form-row select:focus,
+  .form-row textarea:focus {
+    outline: none;
+    border-color: #D9B84F;
+    box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
+  }
+
+  .form-error {
+    margin-top: 6px;
+    color: #DC2626;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="patient-page-header">
+  <h1>{% if mode == "create" %}환자 추가{% else %}환자 수정{% endif %}</h1>
+  <div class="subtitle">환자코드만 등록합니다 · 임상 입력은 예측 화면에서</div>
+</div>
+
+<main class="page-body">
+  <div class="content-card form-card">
+    <form method="post">
+      {% csrf_token %}
+
+      {% for field in form %}
         <div class="form-row">
           <label for="{{ field.id_for_label }}">{{ field.label }}</label>
           {{ field }}
+
           {% for error in field.errors %}
             <div class="form-error">{{ error }}</div>
           {% endfor %}
         </div>
-        {% endfor %}
-        <div class="form-actions">
-          <button class="btn btn-purple" type="submit">저장</button>
-          <a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">취소</a>
-        </div>
-      </form>
-    </div>
-  </main>
-</body>
-</html>
+      {% endfor %}
+
+      <div class="form-actions">
+        <button class="btn btn-purple" type="submit">저장</button>
+        <a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">취소</a>
+      </div>
+    </form>
+  </div>
+</main>
+{% endblock %}

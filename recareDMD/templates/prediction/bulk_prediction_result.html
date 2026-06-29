@@ -1,13 +1,10 @@
+{% extends 'base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CSV 대량 예측 결과</title>
-    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
 
-    <style>
+{% block title %}CSV 대량 예측 결과{% endblock %}
+
+{% block extra_style %}
+<style>
         /* common.css에 없는, 이 페이지 전용 보조 스타일만 추가 */
 
         .summary-card {
@@ -396,10 +393,10 @@
             background: #9aa3d9;
             color: #ffffff !important;
         }
-    </style>
-</head>
+</style>
+{% endblock %}
 
-<body>
+{% block content %}
 <div class="page-wrap">
 
     <div class="hero">
@@ -499,17 +496,17 @@
     </div>
 
     <div class="button-row">
-        <a href="{% url 'dashboard:home' %}" class="home-link">메인으로 가기</a>
         <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
-
         {% if first_prediction_id %}
         <a href="{% url 'analysis:shap_result' first_prediction_id %}" class="shap-link">SHAP 분석 보기</a>
         {% endif %}
     </div>
 
 </div>
+{% endblock %}
 
+{% block extra_script %}
 <script>
     const fixedColumns = ["성별", "재입원 확률", "위험 등급"];
 
@@ -842,6 +839,4 @@
         });
     });
 </script>
-
-</body>
-</html>
+{% endblock %}

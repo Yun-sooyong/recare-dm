@@ -1,85 +1,80 @@
+{% extends 'base.html' %}
 {% load static %}
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>개인 예측 결과</title>
-    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
-  </head>
 
-  <body>
-    <div class="page-wrap">
-      <div class="hero">
-        <h1>개인 환자 예측 결과</h1>
-        <p>입력된 환자 정보를 바탕으로 30일 이내 재입원 가능성을 예측했습니다.</p>
-      </div>
+{% block title %}개인 예측 결과{% endblock %}
 
-      <div class="result-layout">
-        <div>
-          <div class="probability-card">
-            <div class="patient-name">{{ patient_name }}</div>
+{% block content %}
+<div class="page-wrap">
+  <div class="hero">
+    <h1>개인 환자 예측 결과</h1>
+    <p>입력된 환자 정보를 바탕으로 30일 이내 재입원 가능성을 예측했습니다.</p>
+  </div>
 
-            <div class="probability-label">30일 이내 재입원 확률</div>
-            <div class="probability">{{ probability }}%</div>
+  <div class="result-layout">
+    <div>
+      <div class="probability-card">
+        <div class="patient-name">{{ patient_name }}</div>
 
-            {% if risk_label == '고위험' %}
-            <span class="badge high">고위험</span>
-            {% elif risk_label == '중위험' %}
-            <span class="badge middle">중위험</span>
-            {% else %}
-            <span class="badge normal">정상</span>
-            {% endif %}
+        <div class="probability-label">30일 이내 재입원 확률</div>
+        <div class="probability">{{ probability }}%</div>
 
-            <p class="risk-message">{{ risk_message }}</p>
-          </div>
-
-          <div class="card">
-            <h2>의료진 확인 사항</h2>
-            <div class="action-box">
-              예측 결과는 진료 판단을 보조하기 위한 참고 정보입니다. 실제 환자
-              상태, 검사 결과, 퇴원 계획, 보호자 지원 여부 등을 함께 확인해야
-              합니다.
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <h2>입력된 환자 정보</h2>
-
-            <table class="summary-table">
-              <tbody>
-                {% for key, value in input_summary.items %}
-                <tr>
-                  <th>{{ key }}</th>
-                  <td>{{ value }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="card">
-            <h2>위험도 상승 요인</h2>
-
-            <ul class="factor-list">
-              {% for factor in risk_factors %}
-              <li>{{ factor }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="button-row">
-        <a href="{% url 'dashboard:home' %}" class="home-link">메인으로 가기</a>
-        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
-        <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
-
-        {% if prediction_url_id %}
-          <a href="{% url 'analysis:shap_result' prediction_url_id %}" class="shap-link">SHAP 분석 보기</a>
+        {% if risk_label == '고위험' %}
+          <span class="badge high">고위험</span>
+        {% elif risk_label == '중위험' %}
+          <span class="badge middle">중위험</span>
+        {% else %}
+          <span class="badge normal">정상</span>
         {% endif %}
+
+        <p class="risk-message">{{ risk_message }}</p>
+      </div>
+
+      <div class="card">
+        <h2>의료진 확인 사항</h2>
+        <div class="action-box">
+          예측 결과는 진료 판단을 보조하기 위한 참고 정보입니다. 실제 환자
+          상태, 검사 결과, 퇴원 계획, 보호자 지원 여부 등을 함께 확인해야
+          합니다.
+        </div>
       </div>
     </div>
-  </body>
-</html>
+
+    <div>
+      <div class="card">
+        <h2>입력된 환자 정보</h2>
+
+        <table class="summary-table">
+          <tbody>
+            {% for key, value in input_summary.items %}
+              <tr>
+                <th>{{ key }}</th>
+                <td>{{ value }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>위험도 상승 요인</h2>
+
+        <ul class="factor-list">
+          {% for factor in risk_factors %}
+            <li>{{ factor }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-row">
+    <a href="{% url 'dashboard:home' %}" class="home-link">대시보드로 가기</a>
+    <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+    <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+
+    {% if prediction_url_id %}
+      <a href="{% url 'analysis:shap_result' prediction_url_id %}" class="shap-link">SHAP 분석 보기</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
