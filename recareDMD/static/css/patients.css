@@ -82,7 +82,7 @@ body {
 /* ---------- 본문 ---------- */
 .page-body {
   max-width: 1080px;
-  margin: -20px auto 48px;
+  margin: 20px auto 48px;
   padding: 0 24px;
 }
 
