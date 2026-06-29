@@ -1,3 +1,4 @@
+from django.db.models import OuterRef, Subquery
 from django.shortcuts import render
 from patients.models import PersonalInfo, PredictionData
 
@@ -6,29 +7,31 @@ def landing(request):
 
 def home(request):
     total = PersonalInfo.objects.count()
-    high = PredictionData.objects.filter(risk_level='고위험').values('patient').distinct().count()
-    caution = PredictionData.objects.filter(risk_level='중위험').values('patient').distinct().count()
-    normal = PredictionData.objects.filter(risk_level='저위험').values('patient').distinct().count()
+
+    latest_pk = Subquery(
+        PredictionData.objects.filter(
+            patient=OuterRef('patient')
+        ).order_by('-predicted_at', '-visit_id').values('visit_id')[:1]
+    )
+    latest_preds = PredictionData.objects.filter(visit_id=latest_pk)
+
+    high = latest_preds.filter(risk_level='고위험').count()
+    caution = latest_preds.filter(risk_level='중위험').count()
+    normal = latest_preds.filter(risk_level='저위험').count()
 
     high_patients = (
-        PredictionData.objects
+        latest_preds
         .filter(risk_level='고위험')
         .select_related('patient')
         .order_by('-predicted_at')[:10]
     )
 
     recent = (
-        PredictionData.objects
+        latest_preds
         .exclude(predicted_at=None)
         .select_related('patient')
         .order_by('-predicted_at')[:10]
     )
-
-    risk_counts = [
-        PredictionData.objects.filter(risk_level='저위험').values('patient').distinct().count(),
-        PredictionData.objects.filter(risk_level='중위험').values('patient').distinct().count(),
-        PredictionData.objects.filter(risk_level='고위험').values('patient').distinct().count(),
-    ]
 
     return render(request, "dashboard/home.html", {
         "active_page": "dashboard",
@@ -38,5 +41,5 @@ def home(request):
         "normal": normal,
         "high_patients": high_patients,
         "recent": recent,
-        "risk_counts": risk_counts,
+        "risk_counts": [normal, caution, high],
     })
