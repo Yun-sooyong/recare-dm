@@ -55,37 +55,36 @@ def bulk_predict(dataset, model):
 
     for i, data in enumerate(dataset):
         try:
-            probability_percent = round(probabilities[i] * 100, 2)
+            with transaction.atomic():
+                probability_percent = round(probabilities[i] * 100, 2)
 
-            if probability_percent >= 70:
-                risk_label = "고위험"
-            elif probability_percent >= 40:
-                risk_label = "중위험"
-            else:
-                risk_label = "저위험"
-
-            prediction_data = save_prediction_result_to_db(
-                patient_data=data,
-                probability_percent=probability_percent,
-                risk_label=risk_label,
-            )
-
-            save_shap_results(
-                prediction=prediction_data,
-                model_input=model_input_batch.iloc[[i]],
-                explainer=explainer,
-            )
-
+                if probability_percent >= 70:
+                    risk_label = "고위험"
+                elif probability_percent >= 40:
+                    risk_label = "중위험"
+                else:
+                    risk_label = "저위험"
+                
+                prediction_data = save_prediction_result_to_db(
+                    patient_data=data,
+                    probability_percent=probability_percent,
+                    risk_label=risk_label,
+                )
+            
+                save_shap_results(
+                    prediction=prediction_data,
+                    model_input=model_input_batch.iloc[[i]],
+                    explainer=explainer,
+                )
             results.append(prediction_data)
 
         except Exception as e:
-            print(f"[bulk_predict] index={i} 실패: {e}")
             logger.error(f"[bulk_predict] index={i} 처리 실패: {e}", exc_info=True)
             failed_indices.append(i)
             continue
 
     if failed_indices:
-        print(
+        logger.warning(
             f"[bulk_predict] 총 {len(dataset)}건 중 {len(failed_indices)}건 실패 "
             f"(indices={failed_indices})"
         )

@@ -6,7 +6,6 @@ import pickle
 import numpy as np
 import pandas as pd
 from django.conf import settings
-from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -783,68 +782,62 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
     patient_name = safe_value('name', '')
 
     if nbr:
-        patient, created = PersonalInfo.objects.get_or_create(patient_nbr=int(float(nbr)))
+        nbr = str(nbr).strip().lstrip('\ufeff')
+        patient, created = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
         if patient_name and (created or not patient.patient_name):
             patient.patient_name = patient_name
             patient.save(update_fields=['patient_name'])
     else:
-        if patient_name:
-            patient = PersonalInfo.objects.filter(patient_name=patient_name).first()
-        else:
-            patient = None
-
-        if not patient:
-            max_nbr = (
-                PersonalInfo.objects
-                .order_by('-patient_nbr')
-                .values_list('patient_nbr', flat=True)
-                .first()
-                or 10000
-            )
-            patient = PersonalInfo.objects.create(
-                patient_nbr=max_nbr + 1,
-                patient_name=patient_name,
-            )
-
-    with transaction.atomic():
-        max_eid = (
-            PatientPrediction.objects
-            .order_by('-encounter_id')
-            .values_list('encounter_id', flat=True)
+        max_nbr = (
+            PersonalInfo.objects
+            .order_by('-patient_nbr')
+            .values_list('patient_nbr', flat=True)
             .first()
-            or 0
+            or 10000
+        )
+        patient = PersonalInfo.objects.create(
+            patient_nbr=max_nbr + 1,
+            patient_name=patient_name,
         )
 
-        prediction_data = PatientPrediction.objects.create(
-            patient=patient,
-            encounter_id=max_eid + 1,
-            visit_date=timezone.now().date(),
-            is_inpatient=True,
-            race=safe_value('race', 'Unknown'),
-            gender=safe_value('gender', 'Unknown'),
-            age=safe_value('age', safe_value('raw_age', 'Unknown')),
-            time_in_hospital=safe_int('time_in_hospital'),
-            num_lab_procedures=safe_int('num_lab_procedures'),
-            num_procedures=safe_int('num_procedures'),
-            num_medications=safe_int('num_medications'),
-            number_outpatient=safe_int('number_outpatient'),
-            number_emergency=safe_int('number_emergency'),
-            number_inpatient=safe_int('number_inpatient'),
-            number_diagnoses=safe_int('number_diagnoses'),
-            diag_1=safe_value('diag_1', 'Unknown'),
-            diag_2=safe_value('diag_2', 'Unknown'),
-            diag_3=safe_value('diag_3', 'Unknown'),
-            max_glu_serum=safe_value('max_glu_serum', 'None'),
-            A1Cresult=safe_value('A1Cresult', 'None'),
-            discharge_disposition_id=safe_int('discharge_disposition_id', 1),
-            metformin=safe_value('metformin', 'No'),
-            insulin=safe_value('insulin', 'No'),
-            change=safe_value('change', 'No'),
-            diabetesMed=safe_value('diabetesMed', 'No'),
-            readmit_proba=float(probability_percent),
-            risk_level=risk_label,
-            predicted_at=timezone.now(),
-        )
+    max_eid = (
+        PatientPrediction.objects
+        .order_by('-encounter_id')
+        .values_list('encounter_id', flat=True)
+        .first()
+        or 0
+    )
+
+    prediction_data = PatientPrediction.objects.create(
+        patient=patient,
+        encounter_id=max_eid + 1,
+        visit_date=timezone.now().date(),
+        is_inpatient=True,
+        race=safe_value('race', 'Unknown'),
+        gender=safe_value('gender', 'Unknown'),
+        age=safe_value('age', safe_value('raw_age', 'Unknown')),
+        time_in_hospital=safe_int('time_in_hospital'),
+        num_lab_procedures=safe_int('num_lab_procedures'),
+        num_procedures=safe_int('num_procedures'),
+        num_medications=safe_int('num_medications'),
+        number_outpatient=safe_int('number_outpatient'),
+        number_emergency=safe_int('number_emergency'),
+        number_inpatient=safe_int('number_inpatient'),
+        number_diagnoses=safe_int('number_diagnoses'),
+        diag_1=safe_value('diag_1', 'Unknown'),
+        diag_2=safe_value('diag_2', 'Unknown'),
+        diag_3=safe_value('diag_3', 'Unknown'),
+        max_glu_serum=safe_value('max_glu_serum', 'None'),
+        A1Cresult=safe_value('A1Cresult', 'None'),
+        discharge_disposition_id=safe_int('discharge_disposition_id', 1),
+        metformin=safe_value('metformin', 'No'),
+        insulin=safe_value('insulin', 'No'),
+        change=safe_value('change', 'No'),
+        diabetesMed=safe_value('diabetesMed', 'No'),
+        readmit_proba=float(probability_percent),
+        risk_level=risk_label,
+        predicted_at=timezone.now(),
+    )
 
     return prediction_data
     
