@@ -118,7 +118,7 @@ class PredictionData(models.Model):
     # 아직 예측 안 된 내원은 null. prediction(정은)이 채운다.
     readmit_proba = models.FloatField(null=True, blank=True,
         help_text="30일 재입원 위험도 (0~1). 미예측 시 null")
-    risk_level = models.CharField(max_length=10, blank=True,
+    risk_level = models.CharField(max_length=20, blank=True,
         help_text="위험 등급 (high/medium/low 등). 미예측 시 빈 문자열")
     predicted_at = models.DateTimeField(null=True, blank=True,
         help_text="예측 수행 시각. 미예측 시 null")
