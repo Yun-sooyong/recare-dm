@@ -2,6 +2,8 @@ import os
 import pickle
 import pandas as pd
 import csv
+import numpy as np
+import math
 
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -557,15 +559,49 @@ def download_sample_pdf(request):
 #=========================
 # 저장 함수 — patients.PredictionData 에 연결 저장
 #=========================
+def clean_json_value(value):
+    if isinstance(value, dict):
+        return {key: clean_json_value(val) for key, val in value.items()}
+
+    if isinstance(value, list):
+        return [clean_json_value(item) for item in value]
+
+    if isinstance(value, np.integer):
+        return int(value)
+
+    if isinstance(value, np.floating):
+        if math.isnan(value):
+            return None
+        return float(value)
+
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+
+    try:
+        if pd.isna(value):
+            return None
+    except Exception:
+        pass
+
+    return value
+
+
+def clean_json_data(data):
+    return {key: clean_json_value(value) for key, value in data.items()}
+
+
 def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
-    # 환자 찾기/생성
-    nbr = patient_data.get('patient_nbr')
+    clean = clean_json_data(patient_data)
+
+    # 환자 찾기/생성 (patient_nbr 기반, 없으면 자동 생성)
+    nbr = clean.get('patient_nbr')
     if nbr:
         patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
     else:
         max_nbr = PersonalInfo.objects.order_by('-patient_nbr').values_list('patient_nbr', flat=True).first() or 10000
         patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
 
+    # encounter_id 자동 생성
     max_eid = PatientPrediction.objects.order_by('-encounter_id').values_list('encounter_id', flat=True).first() or 0
 
     prediction_data = PatientPrediction.objects.create(
@@ -573,27 +609,27 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
         encounter_id=max_eid + 1,
         visit_date=timezone.now().date(),
         is_inpatient=True,
-        race=patient_data.get('race', ''),
-        gender=patient_data.get('gender', ''),
-        age=patient_data.get('age') or patient_data.get('raw_age', ''),
-        time_in_hospital=int(patient_data.get('time_in_hospital') or 0),
-        num_lab_procedures=int(patient_data.get('num_lab_procedures') or 0),
-        num_procedures=int(patient_data.get('num_procedures') or 0),
-        num_medications=int(patient_data.get('num_medications') or 0),
-        number_outpatient=int(patient_data.get('number_outpatient') or 0),
-        number_emergency=int(patient_data.get('number_emergency') or 0),
-        number_inpatient=int(patient_data.get('number_inpatient') or 0),
-        number_diagnoses=int(patient_data.get('number_diagnoses') or 0),
-        diag_1=patient_data.get('diag_1', ''),
-        diag_2=patient_data.get('diag_2', ''),
-        diag_3=patient_data.get('diag_3', ''),
-        max_glu_serum=patient_data.get('max_glu_serum', ''),
-        A1Cresult=patient_data.get('A1Cresult', ''),
-        discharge_disposition_id=int(patient_data.get('discharge_disposition_id') or 1),
-        metformin=patient_data.get('metformin', 'No'),
-        insulin=patient_data.get('insulin', 'No'),
-        change=patient_data.get('change', ''),
-        diabetesMed=patient_data.get('diabetesMed', ''),
+        race=clean.get('race', ''),
+        gender=clean.get('gender', ''),
+        age=clean.get('age') or clean.get('raw_age', ''),
+        time_in_hospital=int(clean.get('time_in_hospital') or 0),
+        num_lab_procedures=int(clean.get('num_lab_procedures') or 0),
+        num_procedures=int(clean.get('num_procedures') or 0),
+        num_medications=int(clean.get('num_medications') or 0),
+        number_outpatient=int(clean.get('number_outpatient') or 0),
+        number_emergency=int(clean.get('number_emergency') or 0),
+        number_inpatient=int(clean.get('number_inpatient') or 0),
+        number_diagnoses=int(clean.get('number_diagnoses') or 0),
+        diag_1=clean.get('diag_1', ''),
+        diag_2=clean.get('diag_2', ''),
+        diag_3=clean.get('diag_3', ''),
+        max_glu_serum=clean.get('max_glu_serum', ''),
+        A1Cresult=clean.get('A1Cresult', ''),
+        discharge_disposition_id=int(clean.get('discharge_disposition_id') or 1),
+        metformin=clean.get('metformin', 'No'),
+        insulin=clean.get('insulin', 'No'),
+        change=clean.get('change', ''),
+        diabetesMed=clean.get('diabetesMed', ''),
         readmit_proba=float(probability_percent),
         risk_level=risk_label,
         predicted_at=timezone.now(),

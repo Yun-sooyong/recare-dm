@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from patients.models import PersonalInfo, PredictionData
 
-from prediction.predict import (
+from analysis.preprocessing import (
     age_to_group,
     get_risk_label,
     get_risk_message,
