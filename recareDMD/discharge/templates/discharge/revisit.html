@@ -5,26 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>재방문 등록 - 환자 {{ patient.patient_nbr }}</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; padding: 32px; }
-        .container { max-width: 860px; margin: 0 auto; }
-        h1 { font-size: 1.6rem; margin-bottom: 8px; }
-        .sub { color: #666; margin-bottom: 24px; }
+    :root {
+        --bg-main: #D8D1C4;
+        --bg-card: #FFFDF8;
+        --bg-soft: #F2EEE6;
+        --main-color: #1E2530;
+        --point-color: #D9B84F;
+        --border-color: #C8C0B0;
+    }
 
-        .card { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .card h2 { font-size: 1.1rem; margin-bottom: 16px; border-bottom: 2px solid #4a90d9; padding-bottom: 8px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
-        .form-control { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; }
-        select.form-control { height: 34px; }
+    body {
+        background: var(--bg-main);
+        font-family: 'Noto Sans KR', sans-serif;
+        color: var(--main-color);
+        min-height: 100vh;
+        padding: 30px 20px;
+    }
 
-        .btn { padding: 10px 24px; border: none; border-radius: 4px; font-size: 0.95rem; cursor: pointer; }
-        .btn-primary { background: #4a90d9; color: #fff; }
-        .btn-primary:hover { background: #357abd; }
-        .btn-secondary { background: #6c757d; color: #fff; text-decoration: none; display: inline-block; }
-        .actions { display: flex; gap: 12px; margin-top: 16px; }
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .sub {
+        font-size: 13px;
+        color: #6b6457;
+        margin-bottom: 28px;
+    }
+
+    .card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 28px 32px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        margin-bottom: 20px;
+    }
+
+    .card h2 {
+        font-size: 15px;
+        font-weight: 700;
+        border-bottom: 2px solid var(--point-color);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 24px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #5a5245;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-control {
+        padding: 9px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-soft);
+        color: var(--main-color);
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+        width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-control:focus {
+        border-color: var(--point-color);
+        background: var(--bg-card);
+    }
+
+    .actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+
+    .btn {
+        padding: 10px 28px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.2s;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-primary {
+        background: var(--point-color);
+        color: var(--main-color);
+    }
+
+    .btn-secondary {
+        background: var(--bg-soft);
+        color: var(--main-color);
+        border: 1px solid var(--border-color);
+    }
     </style>
 </head>
 <body>

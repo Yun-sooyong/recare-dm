@@ -6,61 +6,116 @@
 <title>재방문 예측 결과 — {{ patient.patient_nbr }}</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --c-bg: #f0f2f5; --c-card: #ffffff; --c-border: #e4e7ec;
-  --c-text: #1a1d23; --c-sub: #6b7280;
-  --c-danger: #e8420a; --c-danger-bg: #fff2ee; --c-danger-bd: #fccdb8;
-  --c-warn: #d97706; --c-warn-bg: #fffbeb; --c-warn-bd: #fcd34d;
-  --c-ok: #059669; --c-ok-bg: #ecfdf5; --c-ok-bd: #6ee7b7;
-  --radius: 10px;
-  --shadow: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --bg-main: #D8D1C4;
+  --bg-card: #FFFDF8;
+  --bg-soft: #F2EEE6;
+  --main-color: #1E2530;
+  --point-color: #D9B84F;
+  --text-main: #1F1F1F;
+  --text-sub: #6F6A61;
+  --text-muted: #8B857B;
+  --border-color: #E4DED3;
+  --shadow-card: 0 8px 22px rgba(30, 37, 48, 0.06);
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --danger-color: #D96B5F;
+  --danger-bg: #FBE7E3;
+  --danger-bd: rgba(217,107,95,0.28);
+  --danger-text: #B64238;
+  --middle-bg: #F8EBC2;
+  --middle-bd: rgba(217,184,79,0.28);
+  --middle-text: #9A6E00;
+  --normal-bg: #E4ECE7;
+  --normal-bd: rgba(79,119,102,0.28);
+  --normal-text: #4F7766;
 }
+
 body {
-  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  background: var(--c-bg); color: var(--c-text);
-  font-size: 14px; line-height: 1.5; padding: 24px; min-height: 100vh;
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 34%), var(--bg-main);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 24px;
+  min-height: 100vh;
 }
+
 .container { max-width: 640px; margin: 0 auto; }
 
-.breadcrumb { font-size: 13px; color: var(--c-sub); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
-.breadcrumb a { color: var(--c-sub); text-decoration: none; }
-.breadcrumb a:hover { color: var(--c-text); }
-.breadcrumb .sep { color: #9ca3af; }
-.breadcrumb .cur { color: var(--c-text); font-weight: 500; }
+/* 브레드크럼 */
+.breadcrumb { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb a { color: var(--text-sub); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-main); }
+.breadcrumb .sep { color: var(--text-muted); }
+.breadcrumb .cur { color: var(--text-main); font-weight: 700; }
 
+/* 카드 */
 .card {
-  background: var(--c-card); border: 1px solid var(--c-border);
-  border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 16px;
 }
-.card-title { font-size: 13px; font-weight: 600; color: var(--c-sub); margin-bottom: 16px; }
 
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+  margin-bottom: 16px;
+  border-left: 2px solid var(--point-color); padding-left: 8px;
+}
+
+/* 결과 박스 */
 .result-box {
-  text-align: center; padding: 28px; border-radius: 10px; margin-bottom: 16px;
+  text-align: center; padding: 28px; border-radius: var(--radius-sm); margin-bottom: 16px;
 }
-.result-box.high { background: var(--c-danger-bg); border: 2px solid var(--c-danger-bd); }
-.result-box.medium { background: var(--c-warn-bg); border: 2px solid var(--c-warn-bd); }
-.result-box.low { background: var(--c-ok-bg); border: 2px solid var(--c-ok-bd); }
-.result-box .prob { font-size: 42px; font-weight: 800; line-height: 1; }
-.result-box.high .prob { color: var(--c-danger); }
-.result-box.medium .prob { color: var(--c-warn); }
-.result-box.low .prob { color: var(--c-ok); }
-.result-box .rlabel { font-size: 16px; font-weight: 600; margin-top: 6px; }
-.result-box .rmsg { font-size: 13px; color: var(--c-sub); margin-top: 8px; }
+.result-box.high { background: var(--danger-bg); border: 2px solid var(--danger-bd); }
+.result-box.medium { background: var(--middle-bg); border: 2px solid var(--middle-bd); }
+.result-box.low { background: var(--normal-bg); border: 2px solid var(--normal-bd); }
 
+.result-box .prob { font-size: 42px; font-weight: 950; line-height: 1; letter-spacing: -1px; }
+.result-box.high .prob { color: var(--danger-color); }
+.result-box.medium .prob { color: var(--middle-text); }
+.result-box.low .prob { color: var(--normal-text); }
+
+.result-box .rlabel { font-size: 16px; font-weight: 800; margin-top: 6px; }
+.result-box.high .rlabel { color: var(--danger-text); }
+.result-box.medium .rlabel { color: var(--middle-text); }
+.result-box.low .rlabel { color: var(--normal-text); }
+
+.result-box .rmsg { font-size: 13px; color: var(--text-sub); margin-top: 8px; line-height: 1.6; }
+
+/* 정보 테이블 */
 .info-table { width: 100%; border-collapse: collapse; }
-.info-table th { text-align: left; padding: 8px 12px; background: #fafafa; width: 35%; font-size: 13px; font-weight: 600; color: var(--c-sub); }
-.info-table td { padding: 8px 12px; font-size: 13px; }
-.info-table tr + tr th, .info-table tr + tr td { border-top: 1px solid var(--c-border); }
+.info-table th {
+  text-align: left; padding: 10px 12px;
+  background: var(--bg-soft); width: 35%;
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+}
+.info-table td { padding: 10px 12px; font-size: 13px; color: var(--text-main); }
+.info-table tr + tr th, .info-table tr + tr td { border-top: 1px solid var(--border-color); }
 
+/* 버튼 */
 .actions { display: flex; gap: 10px; }
 .btn {
-  flex: 1; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  flex: 1; padding: 12px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 800;
   text-align: center; text-decoration: none; border: none; cursor: pointer;
+  transition: 0.18s ease;
 }
-.btn-primary { background: #1e2d4a; color: #fff; }
-.btn-primary:hover { background: #162038; }
-.btn-outline { background: transparent; color: var(--c-text); border: 1.5px solid var(--c-border); }
-.btn-outline:hover { background: var(--c-bg); }
+.btn-primary {
+  background: var(--main-color); color: #fff;
+  box-shadow: 0 4px 12px rgba(30,37,48,0.16);
+}
+.btn-primary:hover { background: #141A22; transform: translateY(-1px); }
+.btn-outline {
+  background: rgba(217,184,79,0.12); color: var(--main-color);
+  border: 1.5px solid rgba(217,184,79,0.28);
+}
+.btn-outline:hover { background: rgba(217,184,79,0.22); }
 </style>
 </head>
 <body>
