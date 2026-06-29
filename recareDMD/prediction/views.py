@@ -19,19 +19,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
-from patients.models import PersonalInfo
-from patients.models import PredictionData as PatientPrediction
-
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'lgbm_model.pkl')
-
-from analysis.preprocessing import (
-    age_to_group,
-    get_prediction_url_id,
-    get_risk_label,
-    get_risk_message,
-    load_model,
-    preprocess_for_lgbm,
-)
 
 
 def prediction_page(request):
@@ -343,8 +331,8 @@ def download_sample_csv(request):
 
 def download_sample_pdf(request):
     try:
-        from reportlab.lib.pagesizes import A4
         from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import A4
     except ImportError:
         return HttpResponse('PDF 생성을 위해 reportlab 패키지를 설치해주세요: pip install reportlab')
 
