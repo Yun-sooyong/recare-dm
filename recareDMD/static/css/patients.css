@@ -155,10 +155,7 @@ body {
   box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.2);
 }
 
-.form-input:focus {
-  border-color: var(--purple-500);
-}
-
+/* ---------- 버튼 ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -175,34 +172,22 @@ body {
 }
 
 .btn-purple {
-  background: var(--purple-700);
-  color: #fff;
+  background: var(--main-color);
+  color: var(--white);
+  box-shadow: 0 8px 16px rgba(30, 37, 48, 0.16);
 }
 .btn-purple:hover {
-  background: var(--purple-900);
-}
-.btn-ghost {
-  background: var(--purple-100);
-  color: var(--purple-700);
-}
-.btn-ghost:hover {
-  background: #ddd6fe;
-}
-.btn-danger {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-.btn-danger:hover {
-  background: #fecaca;
-}
-.btn-sm {
-  padding: 6px 11px;
-  font-size: 13px;
+  background: #141a22;
+  transform: translateY(-1px);
 }
 
-.total-count {
-  color: var(--muted);
-  font-size: 13px;
+.btn-ghost {
+  background: rgba(217, 184, 79, 0.18);
+  color: var(--main-color);
+  border-color: rgba(217, 184, 79, 0.28);
+}
+.btn-ghost:hover {
+  background: rgba(217, 184, 79, 0.28);
 }
 
 .btn-danger {
@@ -256,7 +241,7 @@ body {
 }
 
 .patient-table tbody tr:hover {
-  background: #faf9ff;
+  background: rgba(217, 184, 79, 0.06);
 }
 
 .patient-code {
@@ -266,6 +251,7 @@ body {
 }
 .patient-code:hover {
   text-decoration: underline;
+  color: var(--point-color);
 }
 
 /* ---------- 배지 ---------- */
@@ -288,7 +274,6 @@ body {
   font-size: 12px;
   font-weight: 600;
 }
-
 .risk-high {
   display: inline-block;
   background: #fee2e2;
@@ -319,14 +304,25 @@ body {
   font-weight: 600;
 }
 
+.demo-tag {
+  display: inline-block;
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- 기타 ---------- */
 .row-actions {
   display: flex;
   gap: 6px;
   white-space: nowrap;
 }
-
 .muted {
-  color: var(--muted);
+  color: var(--text-sub);
 }
 
 .empty-state {
@@ -356,107 +352,26 @@ body {
 }
 
 .pagination-bar a:hover {
-  background: var(--purple-100);
+  background: rgba(217, 184, 79, 0.18);
 }
 .pagination-bar .current {
-  background: var(--purple-700);
-  color: #fff;
+  background: var(--main-color);
+  color: var(--white);
   font-weight: 700;
 }
 .pagination-bar .disabled {
-  color: #c4c4c4;
+  color: var(--text-muted);
 }
 
-/* ── 환자 상세 ─────────────────────────────────────────── */
-.back-link {
-  display: inline-block;
-  color: #fff;
-  opacity: 0.85;
-  text-decoration: none;
-  font-size: 13px;
-  margin-bottom: 10px;
-}
-.back-link:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
-.content-card + .content-card,
-.quick-actions + .content-card {
-  margin-top: 18px;
-}
-
-.card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.card-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-/* 데모 라벨 — 회색 톤, 경고처럼 과하지 않게 */
-.demo-tag {
-  display: inline-block;
-  background: #f3f4f6;
-  color: var(--muted);
-  border: 1px dashed #d1d5db;
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* SVG Line Chart */
-.risk-chart {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.grid-line {
-  stroke: var(--line);
-  stroke-width: 1;
-}
-.axis-label {
-  fill: var(--muted);
-  font-size: 11px;
-}
-.risk-line {
-  fill: none;
-  stroke: var(--purple-700);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-}
-.risk-dot {
-  fill: #fff;
-  stroke: var(--purple-700);
-  stroke-width: 2.5;
-}
-.chart-foot {
-  font-size: 12px;
-  margin: 10px 0 0;
-}
-
-/* 빠른 액션 */
+/* ---------- 빠른 액션 ---------- */
 .quick-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 18px;
 }
-.btn-disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
 
-/* 내원 카드 */
+/* ---------- 내원 카드 ---------- */
 .visit-head-left {
   display: flex;
   align-items: center;
@@ -466,6 +381,7 @@ body {
   font-weight: 700;
   font-size: 15px;
 }
+
 .tag {
   display: inline-block;
   border-radius: var(--radius-pill);
@@ -474,9 +390,10 @@ body {
   font-weight: 700;
 }
 .tag-inpatient {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--middle-bg);
+  color: var(--middle-text);
 }
+
 .risk-chip {
   display: inline-block;
   background: var(--bg-soft);
@@ -500,9 +417,10 @@ body {
 }
 
 .info-group {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border-color);
   padding-top: 12px;
 }
+
 .group-title {
   margin: 0 0 10px;
   font-size: 12px;
@@ -511,6 +429,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
 .info-group dl {
   margin: 0;
 }
@@ -522,7 +441,7 @@ body {
   font-size: 13px;
 }
 .info-group dt {
-  color: var(--muted);
+  color: var(--text-sub);
   margin: 0;
 }
 .info-group dd {
@@ -531,6 +450,7 @@ body {
   text-align: right;
 }
 
+/* ---------- 진단 ---------- */
 .diag-list {
   list-style: none;
   margin: 0;
@@ -556,6 +476,7 @@ body {
   font-weight: 600;
 }
 
+/* ---------- 약물 ---------- */
 .med-chips {
   display: flex;
   flex-wrap: wrap;
@@ -570,16 +491,16 @@ body {
   color: var(--main-color);
 }
 .med-steady {
-  background: var(--purple-100);
-  color: var(--purple-700);
+  background: rgba(217, 184, 79, 0.18);
+  color: var(--main-color);
 }
 .med-up {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--normal-bg);
+  color: var(--normal-text);
 }
 .med-down {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--danger-bg);
+  color: var(--danger-text);
 }
 .med-meta {
   display: flex;
@@ -589,7 +510,37 @@ body {
   color: var(--text-muted);
 }
 
-/* form / delete pages */
+/* ---------- SVG 차트 ---------- */
+.risk-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.grid-line {
+  stroke: var(--border-color);
+  stroke-width: 1;
+}
+.axis-label {
+  fill: var(--text-sub);
+  font-size: 11px;
+}
+.risk-line {
+  fill: none;
+  stroke: var(--point-color);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.risk-dot {
+  fill: var(--white);
+  stroke: var(--point-color);
+  stroke-width: 2.5;
+}
+.chart-foot {
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+
+/* ---------- 폼 ---------- */
 .form-card {
   max-width: 520px;
 }
@@ -598,12 +549,13 @@ body {
 }
 .form-row label {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 7px;
   font-size: 14px;
+  color: var(--main-color);
 }
 .form-error {
-  color: #b91c1c;
+  color: var(--danger-text);
   font-size: 13px;
   margin-top: 6px;
 }
@@ -613,7 +565,7 @@ body {
   margin-top: 8px;
 }
 .warn-text {
-  color: #b91c1c;
+  color: var(--danger-text);
   font-size: 14px;
   line-height: 1.6;
 }
