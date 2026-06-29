@@ -238,7 +238,7 @@
 
         <div class="actions">
             <button type="submit" class="btn btn-primary">재예측 실행</button>
-            <a href="{% url 'discharge_guide' patient_id=patient.pk %}" class="btn btn-secondary">취소</a>
+            <a href="{% url 'discharge:discharge_guide' patient_id=patient.pk %}" class="btn btn-secondary">취소</a>
         </div>
     </form>
 </div>

@@ -93,8 +93,8 @@ body {
   </div>
 
   <div class="actions">
-    <a href="{% url 'discharge_guide' patient_id=patient.pk %}" class="btn btn-primary">퇴원 안내서로 이동</a>
-    <a href="{% url 'discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">다시 입력</a>
+    <a href="{% url 'discharge:discharge_guide' patient_id=patient.pk %}" class="btn btn-primary">퇴원 안내서로 이동</a>
+    <a href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">다시 입력</a>
   </div>
 
 </div>

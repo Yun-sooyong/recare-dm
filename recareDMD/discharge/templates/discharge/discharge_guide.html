@@ -279,8 +279,8 @@ body.filter-recommended .cl-item[data-type="required"] { display: none; }
     </div>
     <div class="score-label {% if readiness.total < 60 %}danger{% elif readiness.total < 80 %}warn{% else %}ok{% endif %}">{{ readiness.label }}</div>
 
-    <a href="{% url 'discharge_print' patient_id=patient.pk %}" class="btn btn-primary">🖨 퇴원 안내서 출력</a>
-    <a href="{% url 'discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">🔄 재방문 등록</a>
+    <a href="{% url 'discharge:discharge_print' patient_id=patient.pk %}" class="btn btn-primary">🖨 퇴원 안내서 출력</a>
+    <a href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">🔄 재방문 등록</a>
 
     <!-- 퇴원일 저장 폼 -->
     <form method="post" class="date-form">
