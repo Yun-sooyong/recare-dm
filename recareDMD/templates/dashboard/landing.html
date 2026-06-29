@@ -1,19 +1,55 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReCare DM Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>ReCare DM — 당뇨 환자 재입원 예측 시스템</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@200;300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-main: #EDE8DF;
+      --bg-card: #FFFDF8;
+      --bg-soft: #F5F1EA;
+      --navy: #1E2530;
+      --navy-deep: #141920;
+      --gold: #D9B84F;
+      --gold-light: #F0CC6A;
+      --border: #D4CCC0;
+    }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background: #FDFBF7;
-      color: #1E2530;
+      background: var(--bg-main);
+      color: var(--navy);
+      overflow-x: hidden;
+      opacity: 0;
+      animation: pageIn 1s ease 0.2s forwards;
+    }
+
+    @keyframes pageIn { to { opacity: 1; } }
+
+    /* ── 커서 ── */
+    .cursor {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .cursor-ring {
+      width: 32px; height: 32px;
+      border: 1px solid rgba(217,184,79,0.4);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9997;
+      transition: transform 0.2s;
     }
 
     /* ── NAV ── */
@@ -23,129 +59,190 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 22px 60px;
+      padding: 28px 64px;
       z-index: 100;
-      background: rgba(253,251,247,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid transparent;
-      transition: border-color 0.3s;
+      transition: all 0.4s ease;
     }
 
-    nav.scrolled { border-bottom-color: #E8E2D8; }
+    nav.scrolled {
+      background: rgba(237,232,223,0.94);
+      backdrop-filter: blur(20px);
+      padding: 18px 64px;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(30,37,48,0.06);
+    }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 17px;
-      font-weight: 700;
-      color: #1E2530;
+      gap: 12px;
       text-decoration: none;
     }
 
-    .logo-icon {
-      width: 30px; height: 30px;
-      border: 2px solid #D9B84F;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .logo svg { width: 32px; height: 32px; }
+    .logo-text { font-size: 16px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+    .logo-text span { color: var(--gold); }
 
-    .logo-dot { width: 8px; height: 8px; background: #D9B84F; border-radius: 50%; }
-
-    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links { display: flex; gap: 36px; align-items: center; }
 
     .nav-links a {
       text-decoration: none;
-      color: #5a5245;
-      font-size: 14px;
+      color: rgba(30,37,48,0.5);
+      font-size: 13px;
       font-weight: 500;
       transition: color 0.2s;
+      position: relative;
     }
 
-    .nav-links a:hover { color: #1E2530; }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0;
+      width: 0; height: 1px;
+      background: var(--gold);
+      transition: width 0.3s;
+    }
 
-    .btn-nav {
-      background: #1E2530 !important;
+    .nav-links a:hover { color: var(--navy); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      background: var(--navy) !important;
       color: #fff !important;
       padding: 10px 22px;
-      border-radius: 100px;
-      transition: background 0.2s !important;
+      border-radius: 2px;
+      font-size: 13px !important;
+      letter-spacing: 0.5px;
+      transition: all 0.3s !important;
     }
 
-    .btn-nav:hover { background: #D9B84F !important; color: #1E2530 !important; }
+    .nav-cta::after { display: none !important; }
+    .nav-cta:hover { background: var(--gold) !important; color: var(--navy) !important; }
 
     /* ── HERO ── */
     .hero {
+      position: relative;
+      height: 100vh;
       display: flex;
       align-items: center;
-      height: 100vh;
-      padding: 0 60px;
+      overflow: hidden;
+      background: var(--bg-main);
+    }
+
+    #bgCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 22% 50%, rgba(237,232,223,0.15) 0%, rgba(237,232,223,0.72) 55%);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      padding: 0 64px;
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.9s ease 0.4s forwards;
+    }
+
+    .eyebrow-line { width: 36px; height: 1px; background: var(--gold); }
+
+    .eyebrow-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: 68px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -2.5px;
+      margin-bottom: 24px;
+      color: var(--navy);
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.9s ease 0.6s forwards;
+    }
+
+    .hero-title .accent { color: var(--gold); }
+    .hero-title .stroke { color: rgba(30,37,48,0.35); }
+
+    .hero-desc {
+      font-size: 16px;
+      color: rgba(30,37,48,0.55);
+      line-height: 1.85;
+      margin-bottom: 48px;
+      font-weight: 300;
+      max-width: 440px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.9s ease 0.8s forwards;
+    }
+
+    .hero-desc strong { color: var(--navy); font-weight: 700; }
+
+    .hero-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.9s ease 1s forwards;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy);
+      color: #fff;
+      padding: 16px 36px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all 0.3s;
       position: relative;
       overflow: hidden;
     }
 
-    .hero-text { flex: 0 0 500px; z-index: 10; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #F2EEE6;
-      border: 1px solid #C8C0B0;
-      border-radius: 100px;
-      padding: 6px 16px;
-      font-size: 12px;
-      color: #6b6457;
-      margin-bottom: 28px;
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold);
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
     }
 
-    .badge-dot { width: 6px; height: 6px; background: #D9B84F; border-radius: 50%; }
+    .btn-primary:hover::before { transform: translateX(0); }
+    .btn-primary span { position: relative; z-index: 1; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(30,37,48,0.18); }
+    .btn-primary:hover span { color: var(--navy); }
 
-    h1 {
-      font-size: 54px;
-      font-weight: 700;
-      line-height: 1.15;
-      margin-bottom: 14px;
-      letter-spacing: -1.5px;
-    }
-
-    h1 .accent { color: #D9B84F; }
-
-    .desc {
-      font-size: 16px;
-      color: #6b6457;
-      line-height: 1.75;
-      margin-bottom: 40px;
-      font-weight: 300;
-    }
-
-    .desc strong { color: #1E2530; font-weight: 600; }
-
-    .cta-row { display: flex; gap: 16px; align-items: center; }
-
-    .btn-primary {
-      background: #1E2530;
-      color: #fff;
-      padding: 14px 32px;
-      border-radius: 100px;
-      font-size: 15px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.25s;
-      display: inline-block;
-    }
-
-    .btn-primary:hover {
-      background: #D9B84F;
-      color: #1E2530;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(217,184,79,0.35);
-    }
-
-    .btn-outline {
-      color: #5a5245;
-      font-size: 15px;
-      font-weight: 500;
+    .btn-ghost {
+      color: rgba(30,37,48,0.45);
+      font-size: 14px;
       text-decoration: none;
       display: flex;
       align-items: center;
@@ -153,318 +250,526 @@
       transition: color 0.2s;
     }
 
-    .btn-outline:hover { color: #1E2530; }
-    .btn-outline::after { content: '→'; transition: transform 0.2s; }
-    .btn-outline:hover::after { transform: translateX(4px); }
+    .btn-ghost:hover { color: var(--navy); }
+    .btn-ghost .arr { transition: transform 0.2s; }
+    .btn-ghost:hover .arr { transform: translateY(3px); }
 
-    .stats {
+    .hero-stats {
+      position: absolute;
+      right: 64px;
+      bottom: 80px;
+      z-index: 10;
       display: flex;
-      gap: 32px;
-      margin-top: 52px;
-      padding-top: 28px;
-      border-top: 1px solid #E8E2D8;
+      gap: 36px;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 1.2s forwards;
     }
 
-    .stat-num { font-size: 20px; font-weight: 700; }
-    .stat-label { font-size: 11px; color: #8a8070; margin-top: 3px; }
+    .stat-item {
+      text-align: center;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold);
+    }
 
-    canvas {
+    .stat-num { font-size: 22px; font-weight: 800; color: var(--navy); }
+    .stat-label { font-size: 10px; color: rgba(30,37,48,0.45); letter-spacing: 1.5px; margin-top: 4px; text-transform: uppercase; }
+
+    .scroll-ind {
       position: absolute;
-      right: 0; top: 0;
-      height: 100vh;
-      width: 60%;
+      bottom: 36px; left: 64px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 1.4s forwards;
+    }
+
+    .scroll-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease infinite;
+    }
+
+    .scroll-txt {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(30,37,48,0.35);
+      text-transform: uppercase;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.4; }
     }
 
     /* ── ABOUT ── */
     #about {
-      padding: 120px 60px;
-      background: #F2EEE6;
+      background: var(--navy);
+      color: #fff;
+      padding: 140px 64px;
     }
 
-    .section-label {
-      font-size: 12px;
+    .about-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 100px;
+      align-items: center;
+    }
+
+    .sec-eyebrow {
+      font-size: 11px;
       font-weight: 700;
-      color: #D9B84F;
-      letter-spacing: 2px;
+      color: var(--gold);
+      letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-size: 36px;
-      font-weight: 700;
-      line-height: 1.3;
       margin-bottom: 20px;
-      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .section-desc {
+    .sec-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--gold); }
+
+    .sec-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+    }
+
+    .sec-desc {
       font-size: 15px;
-      color: #6b6457;
-      line-height: 1.8;
-      max-width: 560px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.9;
       font-weight: 300;
     }
 
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
-      align-items: center;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .sec-desc strong { color: #fff; font-weight: 600; }
 
-    .about-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    .about-cards { display: flex; flex-direction: column; gap: 2px; }
 
     .about-card {
-      background: #FFFDF8;
-      border: 1px solid #C8C0B0;
-      border-radius: 12px;
-      padding: 20px 24px;
+      padding: 22px 28px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
       display: flex;
-      gap: 16px;
+      gap: 18px;
       align-items: flex-start;
+      transition: all 0.3s;
+      cursor: default;
     }
 
-    .about-icon {
-      width: 40px; height: 40px;
-      background: #F2EEE6;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
+    .about-card:hover {
+      background: rgba(217,184,79,0.07);
+      border-color: rgba(217,184,79,0.18);
+      transform: translateX(6px);
+    }
+
+    .ac-icon {
       font-size: 18px;
+      width: 40px; height: 40px;
+      background: rgba(217,184,79,0.08);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
 
-    .about-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .about-card p { font-size: 13px; color: #6b6457; line-height: 1.6; }
+    .ac-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+    .ac-desc { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+
+    /* ── TEAM ── */
+    #team {
+      background: var(--bg-soft);
+      padding: 140px 64px;
+    }
+
+    .team-wrap { max-width: 1200px; margin: 0 auto; }
+    .team-header { margin-bottom: 56px; }
+
+    .team-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .team-eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--gold); }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .team-card {
+      text-align: center;
+      padding: 32px 16px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: all 0.35s;
+      cursor: default;
+    }
+
+    .team-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--gold);
+      box-shadow: 0 16px 40px rgba(30,37,48,0.1);
+    }
+
+    .team-img-wrap {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 18px;
+      background: transparent;
+      border: none;
+      overflow: visible;
+    }
+
+    .team-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .team-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 5px;
+      letter-spacing: -0.3px;
+    }
+
+    .team-role {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .team-desc {
+      font-size: 11px;
+      color: rgba(30,37,48,0.45);
+      line-height: 1.75;
+    }
 
     /* ── FEATURES ── */
     #features {
-      padding: 120px 60px;
-      background: #FDFBF7;
+      background: var(--bg-main);
+      padding: 140px 64px;
     }
 
-    .features-header {
-      text-align: center;
-      max-width: 600px;
-      margin: 0 auto 64px;
+    .features-wrap { max-width: 1200px; margin: 0 auto; }
+
+    .features-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 56px;
+    }
+
+    .features-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--navy);
+    }
+
+    .features-sub {
+      font-size: 14px;
+      color: rgba(30,37,48,0.45);
+      text-align: right;
+      line-height: 1.7;
+      max-width: 260px;
     }
 
     .features-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      max-width: 1100px;
-      margin: 0 auto;
+      gap: 2px;
+      background: var(--border);
     }
 
     .feature-card {
-      background: #FFFDF8;
-      border: 1px solid #E8E2D8;
-      border-radius: 16px;
-      padding: 28px 24px;
+      background: var(--bg-card);
+      padding: 36px 28px;
       text-decoration: none;
       color: inherit;
-      transition: all 0.25s;
-      display: block;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
     }
 
-    .feature-card:hover {
-      border-color: #D9B84F;
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--gold);
+      transition: width 0.4s ease;
     }
 
-    .feature-icon {
-      width: 48px; height: 48px;
-      background: #F2EEE6;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      margin-bottom: 16px;
-    }
+    .feature-card:hover { background: var(--navy); }
+    .feature-card:hover::after { width: 100%; }
+    .feature-card:hover .fc-title { color: #fff; }
+    .feature-card:hover .fc-desc { color: rgba(255,255,255,0.35); }
+    .feature-card:hover .fc-link { opacity: 1; }
 
-    .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
-    .feature-card p { font-size: 13px; color: #6b6457; line-height: 1.6; }
+    .fc-num { font-size: 11px; color: var(--gold); letter-spacing: 2px; margin-bottom: 24px; font-weight: 600; }
+    .fc-icon { font-size: 26px; margin-bottom: 16px; }
+    .fc-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; transition: color 0.3s; }
+    .fc-desc { font-size: 13px; color: rgba(30,37,48,0.45); line-height: 1.7; transition: color 0.3s; }
+    .fc-link { font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-top: 20px; display: block; color: var(--gold); opacity: 0; transition: opacity 0.3s; }
 
-    .feature-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #D9B84F;
-      margin-top: 16px;
-    }
-
-    /* ── CTA SECTION ── */
+    /* ── CTA ── */
     .cta-section {
-      padding: 100px 60px;
-      background: #1E2530;
+      background: var(--navy-deep);
+      padding: 120px 64px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-waves {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
     }
 
     .cta-section h2 {
-      font-size: 36px;
-      font-weight: 700;
+      position: relative;
+      font-size: 48px;
+      font-weight: 900;
       color: #fff;
+      letter-spacing: -1.5px;
       margin-bottom: 16px;
     }
 
+    .cta-section h2 span { color: var(--gold); }
+
     .cta-section p {
+      position: relative;
       font-size: 15px;
-      color: #8a9ab0;
-      margin-bottom: 36px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 48px;
     }
 
     .btn-gold {
-      background: #D9B84F;
-      color: #1E2530;
-      padding: 16px 40px;
-      border-radius: 100px;
-      font-size: 16px;
-      font-weight: 700;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--gold);
+      color: var(--navy);
+      padding: 18px 48px;
+      font-size: 15px;
+      font-weight: 800;
       text-decoration: none;
-      display: inline-block;
-      transition: all 0.25s;
+      border-radius: 2px;
+      transition: all 0.3s;
     }
 
     .btn-gold:hover {
-      background: #f0cc6a;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(217,184,79,0.4);
+      background: var(--gold-light);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 48px rgba(217,184,79,0.25);
     }
 
     /* ── FOOTER ── */
     footer {
-      padding: 28px 60px;
-      background: #1E2530;
-      border-top: 1px solid #2e3a4a;
+      background: var(--navy-deep);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 28px 64px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    footer span { font-size: 13px; color: #4a5a6a; }
+    footer span { font-size: 12px; color: rgba(255,255,255,0.2); letter-spacing: 0.5px; }
 
-    /* ── ANIMATIONS ── */
-    .fade-in {
-      opacity: 0;
-      transform: translateY(24px);
-      animation: fadeUp 0.8s ease forwards;
-    }
-
-    .fade-in:nth-child(1) { animation-delay: 0.1s; }
-    .fade-in:nth-child(2) { animation-delay: 0.25s; }
-    .fade-in:nth-child(3) { animation-delay: 0.4s; }
-    .fade-in:nth-child(4) { animation-delay: 0.55s; }
-    .fade-in:nth-child(5) { animation-delay: 0.7s; }
-
+    /* ── REVEAL ── */
     .reveal {
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
+      transform: translateY(36px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
     }
 
     .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
 
+<!-- 커서 -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
 <!-- NAV -->
 <nav id="navbar">
   <a href="#" class="logo">
-    <div class="logo-icon"><div class="logo-dot"></div></div>
-    ReCare DM
+    <svg viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="17" stroke="#D9B84F" stroke-width="1.2"/>
+      <circle cx="18" cy="18" r="4" fill="#D9B84F"/>
+    </svg>
+    <span class="logo-text">Re<span>Care</span> DM</span>
   </a>
   <div class="nav-links">
     <a href="#about">소개</a>
+    <a href="#team">팀</a>
     <a href="#features">기능</a>
     <a href="/patients/">환자 목록</a>
-    <a href="/dashboard/" class="btn-nav">대시보드 입장</a>
+    <a href="/dashboard/" class="nav-cta">대시보드 입장</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-text">
-    <div class="badge fade-in">
-      <span class="badge-dot"></span>
-      당뇨 환자 재입원 예측 시스템
+  <canvas id="bgCanvas"></canvas>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">AI-Powered Diabetes Care Platform</span>
     </div>
-    <h1 class="fade-in">
-      데이터 기반<br>
-      <span class="accent">당뇨 관리</span><br>
-      대시보드
+    <h1 class="hero-title">
+      데이터가<br>
+      <span class="stroke">말하는</span><br>
+      <span class="accent">위험 신호</span>
     </h1>
-    <p class="desc fade-in">
-      환자의 임상 데이터를 분석해 <strong>재입원 위험도를 실시간 예측</strong>하고,<br>
-      맞춤형 퇴원 계획과 재방문 관리를 지원합니다.
+    <p class="hero-desc">
+      당뇨 환자의 임상 데이터를 분석해<br>
+      <strong>재입원 위험도를 정밀 예측</strong>합니다.<br>
+      의료진이 선제적으로 개입할 수 있도록.
     </p>
-    <div class="cta-row fade-in">
-      <a href="/dashboard/" class="btn-primary">대시보드 시작하기</a>
-      <a href="#about" class="btn-outline">더 알아보기</a>
-    </div>
-    <div class="stats fade-in">
-      <div class="stat-item">
-        <div class="stat-num">3단계</div>
-        <div class="stat-label">위험도 분류</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">AI 예측</div>
-        <div class="stat-label">머신러닝 모델</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">실시간</div>
-        <div class="stat-label">데이터 연동</div>
-      </div>
+    <div class="hero-actions">
+      <a href="/dashboard/" class="btn-primary">
+        <span>대시보드 시작하기</span><span>→</span>
+      </a>
+      <a href="#about" class="btn-ghost">더 알아보기 <span class="arr">↓</span></a>
     </div>
   </div>
-  <canvas id="wave"></canvas>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">3단계</div>
+      <div class="stat-label">위험 분류</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">AI</div>
+      <div class="stat-label">예측 모델</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">실시간</div>
+      <div class="stat-label">데이터 연동</div>
+    </div>
+  </div>
+  <div class="scroll-ind">
+    <div class="scroll-dot"></div>
+    <span class="scroll-txt">Scroll to explore</span>
+  </div>
 </section>
 
 <!-- ABOUT -->
 <section id="about">
-  <div class="about-grid">
+  <div class="about-wrap">
     <div class="reveal">
-      <div class="section-label">About</div>
-      <h2 class="section-title">왜 ReCare DM<br>인가요?</h2>
-      <p class="section-desc">
-        당뇨 환자의 재입원은 환자 건강과 의료 비용 모두에 큰 부담입니다.
-        ReCare DM은 머신러닝 기반 예측 모델로 <strong>재입원 위험을 사전에 파악</strong>하고,
-        의료진이 선제적으로 개입할 수 있도록 돕습니다.
+      <div class="sec-eyebrow">About</div>
+      <h2 class="sec-title">예측이<br>치료가 됩니다</h2>
+      <p class="sec-desc">
+        당뇨 환자의 재입원은 환자와 의료 시스템 모두에 막대한 부담입니다.<br><br>
+        ReCare DM은 <strong>머신러닝 기반 예측 모델</strong>로 재입원 위험을 사전에 파악하고, 의료진이 최적의 시점에 개입할 수 있도록 돕습니다.
       </p>
     </div>
     <div class="about-cards reveal">
       <div class="about-card">
-        <div class="about-icon">🎯</div>
+        <div class="ac-icon">🎯</div>
         <div>
-          <h4>정확한 위험도 예측</h4>
-          <p>고위험 · 중위험 · 저위험 3단계로 분류해 우선순위 관리</p>
+          <div class="ac-title">정밀 위험도 예측</div>
+          <div class="ac-desc">고위험·중위험·저위험 3단계 분류로 우선순위 관리</div>
         </div>
       </div>
       <div class="about-card">
-        <div class="about-icon">📋</div>
+        <div class="ac-icon">📋</div>
         <div>
-          <h4>맞춤형 퇴원 계획</h4>
-          <p>위험도에 따른 개인별 퇴원 준비도 가이드 자동 생성</p>
+          <div class="ac-title">맞춤형 퇴원 계획</div>
+          <div class="ac-desc">위험도 기반 개인별 퇴원 준비도 가이드 자동 생성</div>
         </div>
       </div>
       <div class="about-card">
-        <div class="about-icon">🔄</div>
+        <div class="ac-icon">🔄</div>
         <div>
-          <h4>재방문 데이터 재예측</h4>
-          <p>재방문 시 새로운 데이터로 위험도를 즉시 재계산</p>
+          <div class="ac-title">재방문 재예측</div>
+          <div class="ac-desc">재방문 시 새로운 데이터로 위험도 즉시 재계산</div>
         </div>
+      </div>
+      <div class="about-card">
+        <div class="ac-icon">📊</div>
+        <div>
+          <div class="ac-title">SHAP 요인 분석</div>
+          <div class="ac-desc">예측 결과의 주요 기여 요인을 시각적으로 설명</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="team-wrap">
+    <div class="team-header reveal">
+      <div class="team-eyebrow">Our Team</div>
+      <h2 style="font-size:42px; font-weight:800; letter-spacing:-1px; color:var(--navy);">함께 만든 사람들</h2>
+    </div>
+    <div class="team-grid">
+      <div class="team-card reveal">
+        <div class="team-img-wrap">
+          <img src="{% static 'Code_Generated_Image3.png' %}" alt="박검모">
+        </div>
+        <div class="team-name">박검모</div>
+        <div class="team-role">Dashboard</div>
+        <div class="team-desc">통계 카드 · 위험 등급 Bar Chart<br>고위험 TOP 8 · 빠른 네비게이션</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-img-wrap">
+          <img src="{% static 'Code_Generated_Image2.png' %}" alt="최일운">
+        </div>
+        <div class="team-name">최일운</div>
+        <div class="team-role">Patient Mgmt · 1</div>
+        <div class="team-desc">환자 목록 (CRUD) · 상세 페이지<br>필터 탭 · 내원 추이 차트</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-img-wrap">
+          <img src="{% static 'Code_Generated_Image.png' %}" alt="윤수용">
+        </div>
+        <div class="team-name">윤수용</div>
+        <div class="team-role">Patient Mgmt · 2</div>
+        <div class="team-desc">퇴원 준비 · 퇴원 안내<br>재방문 등록 · PDF 출력</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-img-wrap">
+          <img src="{% static 'Code_Generated_Image5.png' %}" alt="서정은">
+        </div>
+        <div class="team-name">서정은</div>
+        <div class="team-role">Prediction</div>
+        <div class="team-desc">새 환자 예측 폼 · 결과 페이지<br>CSV 대량 예측 · 등급 도출</div>
+      </div>
+      <div class="team-card reveal">
+        <div class="team-img-wrap">
+          <img src="{% static 'Code_Generated_Image4.png' %}" alt="정다희">
+        </div>
+        <div class="team-name">정다희</div>
+        <div class="team-role">SHAP Analysis</div>
+        <div class="team-desc">위험 vs 보호 요인 분류<br>SHAP Bar Chart · TreeExplainer</div>
       </div>
     </div>
   </div>
@@ -472,110 +777,205 @@
 
 <!-- FEATURES -->
 <section id="features">
-  <div class="features-header reveal">
-    <div class="section-label">Features</div>
-    <h2 class="section-title">주요 기능</h2>
-    <p class="section-desc" style="margin: 0 auto; text-align:center;">
-      대시보드부터 퇴원 관리까지, 당뇨 환자 케어의 전 과정을 지원합니다.
-    </p>
-  </div>
-  <div class="features-grid">
-    <a href="/dashboard/" class="feature-card reveal">
-      <div class="feature-icon">📊</div>
-      <h3>대시보드</h3>
-      <p>전체 환자 현황과 위험도 분포를 한눈에 확인합니다.</p>
-      <span class="feature-link">바로가기 →</span>
-    </a>
-    <a href="/patients/" class="feature-card reveal">
-      <div class="feature-icon">👥</div>
-      <h3>환자 관리</h3>
-      <p>환자 목록 조회, 상세 정보 및 예측 이력을 관리합니다.</p>
-      <span class="feature-link">바로가기 →</span>
-    </a>
-    <a href="/prediction/" class="feature-card reveal">
-      <div class="feature-icon">🤖</div>
-      <h3>재입원 예측</h3>
-      <p>AI 모델로 재입원 확률을 계산하고 위험군을 분류합니다.</p>
-      <span class="feature-link">바로가기 →</span>
-    </a>
-    <a href="/patients/" class="feature-card reveal">
-      <div class="feature-icon">📈</div>
-      <h3>데이터 분석</h3>
-      <p>위험 요인과 통계를 시각화해 인사이트를 제공합니다.</p>
-      <span class="feature-link">바로가기 →</span>
-    </a>
+  <div class="features-wrap">
+    <div class="features-top reveal">
+      <div>
+        <div class="sec-eyebrow" style="color:var(--gold);">Features</div>
+        <div class="features-title">주요 기능</div>
+      </div>
+      <div class="features-sub">대시보드부터 퇴원 관리까지<br>당뇨 환자 케어의 전 과정</div>
+    </div>
+    <div class="features-grid reveal">
+      <a href="/dashboard/" class="feature-card">
+        <div class="fc-num">01</div>
+        <div class="fc-icon">📊</div>
+        <div class="fc-title">대시보드</div>
+        <div class="fc-desc">전체 환자 현황과 위험도 분포를 한눈에 파악합니다.</div>
+        <span class="fc-link">바로가기 →</span>
+      </a>
+      <a href="/patients/" class="feature-card">
+        <div class="fc-num">02</div>
+        <div class="fc-icon">👥</div>
+        <div class="fc-title">환자 관리</div>
+        <div class="fc-desc">환자 목록 조회, 상세 정보 및 예측 이력을 관리합니다.</div>
+        <span class="fc-link">바로가기 →</span>
+      </a>
+      <a href="/prediction/" class="feature-card">
+        <div class="fc-num">03</div>
+        <div class="fc-icon">🤖</div>
+        <div class="fc-title">재입원 예측</div>
+        <div class="fc-desc">AI 모델로 재입원 확률을 계산하고 위험군을 분류합니다.</div>
+        <span class="fc-link">바로가기 →</span>
+      </a>
+      <a href="/patients/" class="feature-card">
+        <div class="fc-num">04</div>
+        <div class="fc-icon">📋</div>
+        <div class="fc-title">퇴원 관리</div>
+        <div class="fc-desc">위험도에 따른 맞춤형 퇴원 안내서를 생성합니다.</div>
+        <span class="fc-link">바로가기 →</span>
+      </a>
+    </div>
   </div>
 </section>
 
 <!-- CTA -->
 <section class="cta-section">
-  <h2 class="reveal">지금 바로 시작하세요</h2>
-  <p class="reveal">환자 데이터를 연동하고 위험도를 확인하세요.</p>
-  <a href="/dashboard/" class="btn-gold reveal">대시보드 입장하기</a>
+  <canvas class="cta-waves" id="ctaCanvas"></canvas>
+  <h2 class="reveal">지금 <span>시작</span>하세요</h2>
+  <p class="reveal">환자 데이터를 연동하고 위험도를 실시간으로 확인하세요.</p>
+  <a href="/dashboard/" class="btn-gold reveal">대시보드 입장하기 →</a>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <span>© 2025 ReCare DM Dashboard</span>
-  <span>당뇨 환자 재입원 예측 시스템</span>
+  <span>AI-Powered Diabetes Readmission Prediction</span>
 </footer>
 
 <script>
-  /* 웨이브 캔버스 */
-  const canvas = document.getElementById('wave');
-  const ctx = canvas.getContext('2d');
+/* ── 커서 ── */
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
 
-  function resize() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 4 + 'px';
+  cursor.style.top = my - 4 + 'px';
+});
+
+(function animRing() {
+  rx += (mx - rx) * 0.1;
+  ry += (my - ry) * 0.1;
+  ring.style.left = rx - 16 + 'px';
+  ring.style.top = ry - 16 + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+document.querySelectorAll('a').forEach(a => {
+  a.addEventListener('mouseenter', () => ring.style.transform = 'scale(2)');
+  a.addEventListener('mouseleave', () => ring.style.transform = 'scale(1)');
+});
+
+/* ── 메인 물결 캔버스 ── */
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+let t = 0;
+
+class Particle {
+  constructor() { this.init(true); }
+  init(rand = false) {
+    this.x = Math.random() * canvas.width;
+    this.y = rand ? Math.random() * canvas.height : canvas.height + 10;
+    this.r = Math.random() * 2 + 0.5;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = -(Math.random() * 0.5 + 0.2);
+    this.life = 0;
+    this.maxLife = Math.random() * 250 + 150;
+    this.gold = Math.random() > 0.6;
   }
-  resize();
-  window.addEventListener('resize', resize);
+  update() {
+    this.x += this.vx + Math.sin(this.life * 0.025) * 0.25;
+    this.y += this.vy;
+    this.life++;
+    if (this.life > this.maxLife || this.y < -10) this.init();
+  }
+  draw() {
+    const p = this.life / this.maxLife;
+    const a = p < 0.1 ? p * 10 : p > 0.8 ? (1 - p) * 5 : 1;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.gold
+      ? `rgba(217,184,79,${a * 0.45})`
+      : `rgba(30,37,48,${a * 0.1})`;
+    ctx.fill();
+  }
+}
 
-  let t = 0;
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const lines = 60;
-    const colors = ['rgba(217,184,79,', 'rgba(30,37,48,', 'rgba(200,192,176,'];
-    for (let i = 0; i < lines; i++) {
-      const progress = i / lines;
-      const alpha = 0.06 + progress * 0.16;
-      ctx.strokeStyle = colors[i % colors.length] + alpha + ')';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      for (let x = 0; x <= canvas.width; x += 4) {
-        const xr = x / canvas.width;
-        const y = canvas.height * 0.5
-          + Math.sin(xr * 3 + t + i * 0.15) * 80
-          + Math.sin(xr * 5 - t * 0.7 + i * 0.1) * 50
-          + Math.cos(xr * 2 + t * 0.5 + i * 0.08) * 60
-          + (progress - 0.5) * canvas.height * 0.55;
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
+const particles = Array.from({ length: 100 }, () => new Particle());
+
+function drawWaves() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < 80; i++) {
+    const prog = i / 80;
+    const alpha = 0.03 + prog * 0.11;
+    const isGold = i % 3 === 0;
+    ctx.strokeStyle = isGold
+      ? `rgba(217,184,79,${alpha})`
+      : `rgba(30,37,48,${alpha * 0.55})`;
+    ctx.lineWidth = isGold ? 2.5 : 1.5;
+    ctx.beginPath();
+    for (let x = 0; x <= canvas.width; x += 3) {
+      const xr = x / canvas.width;
+      const y = canvas.height * 0.5
+        + Math.sin(xr * 3 + t + i * 0.15) * 90
+        + Math.sin(xr * 6 - t * 0.8 + i * 0.1) * 50
+        + Math.cos(xr * 2 + t * 0.4 + i * 0.09) * 60
+        + (prog - 0.5) * canvas.height * 0.62;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    t += 0.008;
-    requestAnimationFrame(draw);
+    ctx.stroke();
   }
-  draw();
+  particles.forEach(p => { p.update(); p.draw(); });
+  t += 0.009;
+  requestAnimationFrame(drawWaves);
+}
+drawWaves();
 
-  /* 스크롤 시 nav 보더 */
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 50);
+/* ── CTA 물결 ── */
+const ctaCanvas = document.getElementById('ctaCanvas');
+const ctaCtx = ctaCanvas.getContext('2d');
+function ctaResize() {
+  ctaCanvas.width = ctaCanvas.offsetWidth;
+  ctaCanvas.height = ctaCanvas.offsetHeight;
+}
+ctaResize();
+let ct = 0;
+function drawCta() {
+  ctaCtx.clearRect(0, 0, ctaCanvas.width, ctaCanvas.height);
+  for (let i = 0; i < 20; i++) {
+    const p = i / 20;
+    ctaCtx.strokeStyle = `rgba(217,184,79,${0.03 + p * 0.07})`;
+    ctaCtx.lineWidth = 1.5;
+    ctaCtx.beginPath();
+    for (let x = 0; x <= ctaCanvas.width; x += 4) {
+      const xr = x / ctaCanvas.width;
+      const y = ctaCanvas.height * 0.5
+        + Math.sin(xr * 4 + ct + i * 0.3) * 30
+        + Math.cos(xr * 2 - ct * 0.5 + i * 0.2) * 20
+        + (p - 0.5) * ctaCanvas.height * 0.7;
+      x === 0 ? ctaCtx.moveTo(x, y) : ctaCtx.lineTo(x, y);
+    }
+    ctaCtx.stroke();
+  }
+  ct += 0.01;
+  requestAnimationFrame(drawCta);
+}
+drawCta();
+
+/* ── 스크롤 nav ── */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ── reveal ── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 100);
+      obs.unobserve(e.target);
+    }
   });
-
-  /* 스크롤 reveal 애니메이션 */
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) {
-        setTimeout(() => e.target.classList.add('visible'), i * 100);
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.15 });
-  reveals.forEach(el => observer.observe(el));
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
