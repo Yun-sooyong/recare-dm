@@ -4,15 +4,13 @@ import pandas as pd
 import csv
 import math
 import numpy as np
-from django.shortcuts import render
 
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-
 from django.utils import timezone
+
 from patients.models import PersonalInfo, PredictionData as PatientPrediction
-from .models import PredictionData
 from analysis.services import single_predict as save_prediction_with_shap
 from analysis.services import bulk_predict as save_bulk_prediction_with_shap
 from analysis.preprocessing import (
@@ -20,15 +18,21 @@ from analysis.preprocessing import (
     age_to_group,
     get_risk_label,
     get_risk_message,
+    get_prediction_url_id,
     load_model,
-    save_prediction_result_to_db,
-    clean_json_data,
 )
 
 
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'lgbm_model.pkl')
 
-
+from analysis.preprocessing import (
+    preprocess_for_lgbm,
+    age_to_group,
+    get_risk_label,
+    get_risk_message,
+    get_prediction_url_id,
+    load_model,
+)
 
 
 def prediction_page(request):
@@ -38,6 +42,7 @@ def prediction_page(request):
         'patient_cart': patient_cart,
         'cart_count': len(patient_cart),
     })
+
 
 def build_patient_data_from_request(request):
     patient_name = request.POST.get('patient_name') or '이름 없음'
@@ -49,32 +54,26 @@ def build_patient_data_from_request(request):
     change = request.POST.get('change') or 'No'
     metformin = request.POST.get('metformin') or 'No'
 
-    age_group = age_to_group(raw_age)
-
-    data = {
+    return {
         'name': patient_name,
         'race': race,
         'gender': gender,
-        'age': age_group,
+        'age': age_to_group(raw_age),
         'raw_age': raw_age,
         'discharge_disposition_id': 1,
-
-        'time_in_hospital': int(request.POST.get('time_in_hospital')),
-        'num_lab_procedures': int(request.POST.get('num_lab_procedures')),
-        'num_procedures': int(request.POST.get('num_procedures')),
-        'num_medications': int(request.POST.get('num_medications')),
-        'number_outpatient': int(request.POST.get('number_outpatient')),
-        'number_emergency': int(request.POST.get('number_emergency')),
-        'number_inpatient': int(request.POST.get('number_inpatient')),
-
+        'time_in_hospital': int(request.POST.get('time_in_hospital') or 0),
+        'num_lab_procedures': int(request.POST.get('num_lab_procedures') or 0),
+        'num_procedures': int(request.POST.get('num_procedures') or 0),
+        'num_medications': int(request.POST.get('num_medications') or 0),
+        'number_outpatient': int(request.POST.get('number_outpatient') or 0),
+        'number_emergency': int(request.POST.get('number_emergency') or 0),
+        'number_inpatient': int(request.POST.get('number_inpatient') or 0),
         'diag_1': 'Circulatory',
         'diag_2': 'Diabetes',
         'diag_3': 'Other',
-        'number_diagnoses': int(request.POST.get('number_diagnoses')),
-
+        'number_diagnoses': int(request.POST.get('number_diagnoses') or 0),
         'max_glu_serum': 'None',
         'A1Cresult': 'None',
-
         'metformin': metformin,
         'repaglinide': 'No',
         'nateglinide': 'No',
@@ -96,22 +95,15 @@ def build_patient_data_from_request(request):
         'glimepiride-pioglitazone': 'No',
         'metformin-rosiglitazone': 'No',
         'metformin-pioglitazone': 'No',
-
         'change': change,
         'diabetesMed': diabetes_med,
     }
 
-    return data
-
-# =========================
-# 단일 환자 예측
-# =========================
 
 def single_predict(request):
     if request.method == 'POST':
         try:
             data = build_patient_data_from_request(request)
-
             input_df = pd.DataFrame([data])
 
             model = load_model()
@@ -127,7 +119,7 @@ def single_predict(request):
                 model=model,
                 data=data,
                 risk_label=risk_label,
-)
+            )
 
             input_summary = {
                 '환자명': data.get('name'),
@@ -153,32 +145,24 @@ def single_predict(request):
 
             if data.get('number_inpatient') >= 1:
                 risk_factors.append('최근 입원 이력이 있어 재입원 위험에 영향을 줄 수 있습니다.')
-
             if data.get('number_emergency') >= 1:
                 risk_factors.append('최근 응급실 방문 이력이 있어 환자 상태 악화 가능성을 확인해야 합니다.')
-
             if data.get('time_in_hospital') >= 7:
                 risk_factors.append('입원 기간이 긴 편으로, 환자 상태가 복잡했을 가능성이 있습니다.')
-
             if data.get('num_medications') >= 20:
                 risk_factors.append('투약 수가 많아 복합 질환 또는 약물 관리 부담이 있을 수 있습니다.')
-
             if data.get('number_diagnoses') >= 7:
                 risk_factors.append('진단 개수가 많아 질환 관리 난도가 높을 수 있습니다.')
-
             if data.get('insulin') != 'No':
                 risk_factors.append('인슐린 처방 정보가 있어 당뇨 관리 강도와 환자 상태를 함께 확인해야 합니다.')
-
             if data.get('diabetesMed') == 'Yes':
                 risk_factors.append('당뇨약 처방 이력이 있어 약물 복용 관리 여부를 확인해야 합니다.')
-
             if data.get('change') == 'Ch':
                 risk_factors.append('당뇨약 변경 이력이 있어 퇴원 후 약물 적응 상태 확인이 필요합니다.')
-
             if not risk_factors:
                 risk_factors.append('입력된 주요 항목에서 뚜렷한 위험 상승 요인은 크지 않습니다.')
 
-            context = {
+            return render(request, 'prediction/prediction_result.html', {
                 'patient_name': data.get('name'),
                 'probability': probability_percent,
                 'risk_label': risk_label,
@@ -186,9 +170,8 @@ def single_predict(request):
                 'input_summary': input_summary,
                 'risk_factors': risk_factors,
                 'prediction_data': prediction_data,
-            }       
-
-            return render(request, 'prediction/prediction_result.html', context)
+                'prediction_url_id': get_prediction_url_id(prediction_data),
+            })
 
         except Exception as e:
             return render(request, 'prediction/prediction_page.html', {
@@ -198,9 +181,64 @@ def single_predict(request):
     return render(request, 'prediction/prediction_page.html')
 
 
-# =========================
-# CSV 대량 예측
-# =========================
+def make_bulk_result_context(display_df, first_prediction_id=None):
+    important_columns = [
+        'name',
+        'gender',
+        'age',
+        'time_in_hospital',
+        'num_lab_procedures',
+        'num_medications',
+        'number_inpatient',
+        'number_emergency',
+        'number_diagnoses',
+        'insulin',
+        '재입원_확률',
+        '위험등급',
+    ]
+
+    result_columns = [
+        col for col in important_columns
+        if col in display_df.columns
+    ]
+
+    result_df = display_df[result_columns].sort_values(
+        by='재입원_확률',
+        ascending=False
+    )
+
+    rename_columns = {
+        'name': '환자명',
+        'gender': '성별',
+        'age': '연령대',
+        'time_in_hospital': '입원 기간',
+        'num_lab_procedures': '검사 횟수',
+        'num_medications': '투약 수',
+        'number_inpatient': '최근 입원 횟수',
+        'number_emergency': '응급 방문 횟수',
+        'number_diagnoses': '진단 개수',
+        'insulin': '인슐린 처방',
+        '재입원_확률': '재입원 확률',
+        '위험등급': '위험 등급',
+    }
+
+    result_df = result_df.rename(columns=rename_columns)
+
+    table_html = result_df.to_html(
+        classes='result-table',
+        index=False,
+        border=0
+    )
+
+    return {
+        'table_html': table_html,
+        'total_count': len(result_df),
+        'high_count': int((result_df['위험 등급'] == '고위험').sum()),
+        'middle_count': int((result_df['위험 등급'] == '중위험').sum()),
+        'low_count': int((result_df['위험 등급'] == '저위험').sum()),
+        'first_prediction_id': first_prediction_id,
+    }
+
 
 def bulk_predict(request):
     if request.method == 'POST':
@@ -224,70 +262,21 @@ def bulk_predict(request):
             display_df['위험등급'] = display_df['재입원_확률'].apply(
                 lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
             )
-            dataset = df.to_dict(orient='records')
 
-            save_bulk_prediction_with_shap(
-                dataset=dataset,
+            saved_shap_predictions = save_bulk_prediction_with_shap(
+                dataset=df.to_dict(orient='records'),
                 model=model,
             )
 
-            important_columns = [
-                'name',
-                'gender',
-                'age',
-                'time_in_hospital',
-                'num_lab_procedures',
-                'num_medications',
-                'number_inpatient',
-                'number_emergency',
-                'number_diagnoses',
-                'insulin',
-                '재입원_확률',
-                '위험등급',
-            ]
+            first_prediction_id = None
 
-            result_columns = [
-                col for col in important_columns
-                if col in display_df.columns
-            ]
+            if saved_shap_predictions:
+                first_prediction_id = get_prediction_url_id(saved_shap_predictions[0])
 
-            result_df = display_df[result_columns]
-
-            result_df = result_df.sort_values(
-                by='재입원_확률',
-                ascending=False
+            context = make_bulk_result_context(
+                display_df=display_df,
+                first_prediction_id=first_prediction_id,
             )
-
-            rename_columns = {
-                'name': '환자명',
-                'gender': '성별',
-                'age': '연령대',
-                'time_in_hospital': '입원 기간',
-                'num_lab_procedures': '검사 횟수',
-                'num_medications': '투약 수',
-                'number_inpatient': '최근 입원 횟수',
-                'number_emergency': '응급 방문 횟수',
-                'number_diagnoses': '진단 개수',
-                'insulin': '인슐린 처방',
-                '재입원_확률': '재입원 확률',
-                '위험등급': '위험 등급',
-            }
-
-            result_df = result_df.rename(columns=rename_columns)
-
-            table_html = result_df.to_html(
-                classes='result-table',
-                index=False,
-                border=0
-            )
-
-            context = {
-                'table_html': table_html,
-                'total_count': len(result_df),
-                'high_count': int((result_df['위험 등급'] == '고위험').sum()),
-                'middle_count': int((result_df['위험 등급'] == '중위험').sum()),
-                'low_count': int((result_df['위험 등급'] == '저위험').sum()),
-            }
 
             return render(request, 'prediction/bulk_prediction_result.html', context)
 
@@ -298,17 +287,15 @@ def bulk_predict(request):
 
     return render(request, 'prediction/prediction_page.html')
 
-#=========================
-# csv 샘플 다운로드 
-#=========================
+
 def download_sample_csv(request):
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attanchment; filename="sample_prediction_input.csv'
-    
+    response['Content-Disposition'] = 'attachment; filename="sample_prediction_input.csv"'
+
     writer = csv.writer(response)
-    
+
     columns = [
-        'name', 'race', 'gender', 'age', 'discharge_disposition_id',
+        'patient_nbr', 'name', 'race', 'gender', 'age', 'discharge_disposition_id',
         'time_in_hospital', 'num_lab_procedures', 'num_procedures',
         'num_medications', 'number_outpatient', 'number_emergency',
         'number_inpatient', 'diag_1', 'diag_2', 'diag_3',
@@ -321,29 +308,29 @@ def download_sample_csv(request):
         'glimepiride-pioglitazone', 'metformin-rosiglitazone',
         'metformin-pioglitazone', 'change', 'diabetesMed', 'readmit_30d'
     ]
-    
+
     sample_rows = [
         [
-            '곽춘봉', 'Caucasian', 'Male', '[60-70)', 1,
-            7, 45, 1, 20, 2, 0, 1,
+            10001, '김민수', 'Caucasian', 'Male', '[30-40)', 1,
+            4, 40, 1, 13, 0, 0, 5,
             'Circulatory', 'Diabetes', 'Other', 6,
             'None', 'None',
             'No', 'No', 'No', 'No',
             'No', 'No', 'No', 'No',
             'No', 'No', 'No', 'No',
-            'No', 'No', 'No', 'Steady',
+            'No', 'No', 'No', 'Down',
             'No', 'No', 'No', 'No',
             'No', 'Ch', 'Yes', 0
         ],
         [
-            '김미자', 'Asian', 'Female', '[70-80)', 6,
-            4, 32, 0, 15, 0, 1, 2,
+            10002, '정유진', 'Asian', 'Female', '[50-60)', 1,
+            9, 62, 2, 26, 0, 1, 3,
             'Diabetes', 'Circulatory', 'Respiratory', 8,
             'None', '>8',
             'Steady', 'No', 'No', 'No',
             'No', 'No', 'No', 'No',
             'No', 'No', 'No', 'No',
-            'No', 'No', 'No', 'Up',
+            'No', 'No', 'No', 'No',
             'No', 'No', 'No', 'No',
             'No', 'Ch', 'Yes', 1
         ],
@@ -354,9 +341,7 @@ def download_sample_csv(request):
 
     return response
 
-#=========================
-# pdf 샘플 다운로드 
-#=========================
+
 def download_sample_pdf(request):
     try:
         from reportlab.pdfgen import canvas
@@ -369,7 +354,6 @@ def download_sample_pdf(request):
 
     p = canvas.Canvas(response, pagesize=A4)
     width, height = A4
-
     y = height - 50
 
     p.setFont("Helvetica-Bold", 16)
@@ -379,17 +363,14 @@ def download_sample_pdf(request):
     p.setFont("Helvetica", 10)
     lines = [
         "Required CSV columns:",
-        "name, race, gender, age, discharge_disposition_id,",
+        "patient_nbr, name, race, gender, age, discharge_disposition_id,",
         "time_in_hospital, num_lab_procedures, num_procedures, num_medications,",
         "number_outpatient, number_emergency, number_inpatient,",
         "diag_1, diag_2, diag_3, number_diagnoses,",
         "max_glu_serum, A1Cresult, metformin, insulin, change, diabetesMed",
         "",
-        "Example row:",
-        "Kim, Asian, Female, [60-70), 1, 7, 45, 1, 20, 2, 0, 1,",
-        "Circulatory, Diabetes, Other, 6, None, None, No, Steady, Ch, Yes",
-        "",
         "Note:",
+        "patient_nbr is used to connect prediction results to existing patients.",
         "readmit_30d can exist in the CSV, but it will be excluded from prediction input."
     ]
 
@@ -403,10 +384,6 @@ def download_sample_pdf(request):
     return response
 
 
-
-#=========================
-# 환자 장바구니 기능
-#=========================
 def add_patient_cart(request):
     if request.method == 'POST':
         try:
@@ -436,6 +413,7 @@ def clear_patient_cart(request):
 
     return redirect('prediction:prediction_page')
 
+
 def predict_patient_cart(request):
     try:
         patient_cart = request.session.get('patient_cart', [])
@@ -460,70 +438,20 @@ def predict_patient_cart(request):
             lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
         )
 
-        dataset = df.to_dict(orient="records")
-
-        save_bulk_prediction_with_shap(
-            dataset=dataset,
+        saved_shap_predictions = save_bulk_prediction_with_shap(
+            dataset=df.to_dict(orient='records'),
             model=model,
         )
 
-        important_columns = [
-            'name',
-            'gender',
-            'age',
-            'time_in_hospital',
-            'num_lab_procedures',
-            'num_medications',
-            'number_inpatient',
-            'number_emergency',
-            'number_diagnoses',
-            'insulin',
-            '재입원_확률',
-            '위험등급',
-        ]
+        first_prediction_id = None
 
-        result_columns = [
-            col for col in important_columns
-            if col in display_df.columns
-        ]
+        if saved_shap_predictions:
+            first_prediction_id = get_prediction_url_id(saved_shap_predictions[0])
 
-        result_df = display_df[result_columns]
-
-        result_df = result_df.sort_values(
-            by='재입원_확률',
-            ascending=False
+        context = make_bulk_result_context(
+            display_df=display_df,
+            first_prediction_id=first_prediction_id,
         )
-
-        rename_columns = {
-            'name': '환자명',
-            'gender': '성별',
-            'age': '연령대',
-            'time_in_hospital': '입원 기간',
-            'num_lab_procedures': '검사 횟수',
-            'num_medications': '투약 수',
-            'number_inpatient': '최근 입원 횟수',
-            'number_emergency': '응급 방문 횟수',
-            'number_diagnoses': '진단 개수',
-            'insulin': '인슐린 처방',
-            '재입원_확률': '재입원 확률',
-            '위험등급': '위험 등급',
-        }
-
-        result_df = result_df.rename(columns=rename_columns)
-
-        table_html = result_df.to_html(
-            classes='result-table',
-            index=False,
-            border=0
-        )
-
-        context = {
-            'table_html': table_html,
-            'total_count': len(result_df),
-            'high_count': int((result_df['위험 등급'] == '고위험').sum()),
-            'middle_count': int((result_df['위험 등급'] == '중위험').sum()),
-            'low_count': int((result_df['위험 등급'] == '저위험').sum()),
-        }
 
         request.session['patient_cart'] = []
         request.session.modified = True
@@ -536,6 +464,4 @@ def predict_patient_cart(request):
             'patient_cart': request.session.get('patient_cart', []),
             'cart_count': len(request.session.get('patient_cart', [])),
         })
-        
-
 
