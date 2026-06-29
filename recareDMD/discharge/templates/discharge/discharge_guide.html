@@ -245,7 +245,8 @@ body.filter-recommended .cl-item[data-type="required"] { display: none; }
   <div class="patient-avatar">👤</div>
   <div class="patient-info">
     <div class="patient-name">
-      {{ patient.patient_nbr }}
+      {% comment %} {{ patient.patient_nbr }} {% endcomment %}
+      {{ patient.patient_name }}
       <span style="font-size:12px;font-weight:400;color:#6b7280;">
         PT-{{ patient.pk|stringformat:"06d" }} · {{ patient.visit_count }}차 내원
       </span>
@@ -266,7 +267,7 @@ body.filter-recommended .cl-item[data-type="required"] { display: none; }
     </div>
     {% if prediction.readmit_proba %}
     <div class="stat-item">
-      <div class="stat-val danger">{{ prediction.readmit_proba|floatformat:1 }}%</div>
+      <div class="stat-val danger">{% widthratio prediction.readmit_proba 1 100 %}%</div>
       <div class="stat-label">재입원 위험도</div>
     </div>
     {% endif %}
