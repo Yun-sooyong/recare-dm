@@ -5,17 +5,17 @@
   <title>대시보드 — ReCare DM</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { display: flex; font-family: 'Segoe UI', sans-serif; background: #F1F5F9; }
+    body { display: flex; font-family: 'Segoe UI', sans-serif; background: #D8D1C4; }
 
     /* 사이드바 */
     .sidebar {
-      width: 220px; min-height: 100vh; background: #1C2B4A;
+      width: 220px; min-height: 100vh; background: #1E2530;
       padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 4px;
       position: fixed;
     } 
     .sidebar-logo { color: white; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
     .sidebar a {
-      display: block; color: #94A3B8; text-decoration: none;
+      display: block; color: #FFFDF8; text-decoration: none;
       padding: 10px 12px; border-radius: 8px; font-size: .88rem;
     }
     .sidebar a:hover, .sidebar a.active { background: #2E3F5C; color: white; }
@@ -26,7 +26,7 @@
     /* 통계 카드 */
     .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.5rem; }
     .stat-card {
-      background: white; border-radius: 12px; padding: 1.2rem 1.4rem;
+      background: #FFFDF8; border-radius: 12px; padding: 1.2rem 1.4rem;
       border-left: 4px solid transparent;
     }
     .stat-card p { font-size: .78rem; color: #64748B; margin-bottom: 6px; }
@@ -39,7 +39,7 @@
 
     /* 중간 2열 */
     .mid-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 1.5rem; }
-    .card { background: white; border-radius: 12px; overflow: hidden; }
+    .card { background: #FFFDF8; border-radius: 12px; overflow: hidden; }
     .card-header {
       padding: .9rem 1.2rem; border-bottom: 1px solid #E2E8F0;
       display: flex; justify-content: space-between; align-items: center;
@@ -50,17 +50,17 @@
     /* 테이블 */
     table { width: 100%; border-collapse: collapse; font-size: .83rem; }
     th { padding: 9px 12px; text-align: left; color: #94A3B8; font-size: .72rem;
-         text-transform: uppercase; background: #F8FAFC; }
+         text-transform: uppercase; background: #FFFDF8; }
     td { padding: 10px 12px; border-top: 1px solid #F1F5F9; }
     tr:hover td { background: #F8FAFF; }
 
     /* 최근 기록 */
-    .recent-section { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+    .recent-section { background: #FFFDF8; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
 
     /* 빠른 링크 */
     .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .quick-card {
-      background: white; border-radius: 12px; padding: 1rem 1.2rem;
+      background: #FFFDF8; border-radius: 12px; padding: 1rem 1.2rem;
       display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;
     }
     .quick-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
@@ -73,7 +73,6 @@
 <!-- 사이드바 -->
 <nav class="sidebar">
   <div class="sidebar-logo">🏥 ReCare DM</div>
-  <a href="{% url 'dashboard:home' %}" class="active">대시보드</a>
   <a href="{% url 'patients:patient_list' %}">환자 목록</a>
   <a href="{% url 'prediction:prediction_page' %}">위험 예측</a>
   <a href="{% url 'patients:patient_list' %}">퇴원 안내</a>
