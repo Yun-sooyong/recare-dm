@@ -99,12 +99,160 @@ def make_discharge_group(value):
 
     if value == 1:
         return 'Home'
-    elif value == 6:
+    elif value in [6, 8]:
         return 'Home_Health_Service'
-    elif value in [2, 3, 4, 5, 10, 22, 23, 24, 27, 28, 29, 30]:
+    elif value in [2, 3, 4, 5, 22, 23, 24, 27, 28, 29, 30]:
         return 'Transfer/Facility'
     else:
         return 'Other/Unknown'
+
+
+# group_by_icd9 결과 카테고리(이미 그룹명인 값 통과 가드용).
+ICD9_GROUPS = {
+    "Circulatory", "Respiratory", "Digestive", "Diabetes", "Injury",
+    "Musculoskeletal", "Genitourinary", "Neoplasms", "Other", "missing",
+}
+
+
+def group_by_icd9(code):
+    
+    s = str(code).strip()
+    if code is None or s in ("?", "", " ", "nan"):
+        return "missing"
+    # 이 가드 제거 금지 — 그룹명 재적용 방어, 빼면 기존 예측 깨짐
+    if s in ICD9_GROUPS:
+        return s
+    if s.startswith("V") or s.startswith("E"):
+        return "Other"
+    try:
+        n = float(s)
+    except ValueError:
+        return "Other"
+    i = int(n)
+    if 390 <= i <= 459 or i == 785:
+        return "Circulatory"
+    if 460 <= i <= 519 or i == 786:
+        return "Respiratory"
+    if 520 <= i <= 579 or i == 787:
+        return "Digestive"
+    if 250 <= n < 251:
+        return "Diabetes"
+    if 800 <= i <= 999:
+        return "Injury"
+    if 710 <= i <= 739:
+        return "Musculoskeletal"
+    if 580 <= i <= 629 or i == 788:
+        return "Genitourinary"
+    if 140 <= i <= 239:
+        return "Neoplasms"
+    return "Other"
+
+
+# DB row(PredictionData) -> 모델 입력 변환
+MODEL_FEATURES = [
+    "race", "gender", "age", "time_in_hospital", "num_lab_procedures",
+    "num_procedures", "num_medications", "number_outpatient", "number_emergency",
+    "number_inpatient", "diag_1", "diag_2", "diag_3", "number_diagnoses",
+    "max_glu_serum", "A1Cresult", "metformin", "repaglinide", "nateglinide",
+    "chlorpropamide", "glimepiride", "acetohexamide", "glipizide", "glyburide",
+    "tolbutamide", "pioglitazone", "rosiglitazone", "acarbose", "miglitol",
+    "troglitazone", "tolazamide", "insulin", "glyburide-metformin",
+    "glipizide-metformin", "glimepiride-pioglitazone", "metformin-rosiglitazone",
+    "metformin-pioglitazone", "change", "diabetesMed", "discharge_group",
+    "inpatient_x_discharge",
+]
+
+# DB 약물 필드명 -> 모델 피처명
+MEDICATION_DB_TO_FEATURE = {
+    "metformin": "metformin",
+    "repaglinide": "repaglinide",
+    "nateglinide": "nateglinide",
+    "chlorpropamide": "chlorpropamide",
+    "glimepiride": "glimepiride",
+    "acetohexamide": "acetohexamide",
+    "glipizide": "glipizide",
+    "glyburide": "glyburide",
+    "tolbutamide": "tolbutamide",
+    "pioglitazone": "pioglitazone",
+    "rosiglitazone": "rosiglitazone",
+    "acarbose": "acarbose",
+    "miglitol": "miglitol",
+    "troglitazone": "troglitazone",
+    "tolazamide": "tolazamide",
+    "insulin": "insulin",
+    "glyburide_metformin": "glyburide-metformin",
+    "glipizide_metformin": "glipizide-metformin",
+    "glimepiride_pioglitazone": "glimepiride-pioglitazone",
+    "metformin_rosiglitazone": "metformin-rosiglitazone",
+    "metformin_pioglitazone": "metformin-pioglitazone",
+}
+
+
+def make_inpatient_x_discharge(number_inpatient, discharge_group_value):
+    return f"{number_inpatient}회_{discharge_group_value}"
+
+
+def encounter_to_features(encounter):
+    f = {
+        "race": encounter.race,
+        "gender": encounter.gender,
+        "age": encounter.age,
+        "time_in_hospital": encounter.time_in_hospital,
+        "num_lab_procedures": encounter.num_lab_procedures,
+        "num_procedures": encounter.num_procedures,
+        "num_medications": encounter.num_medications,
+        "number_outpatient": encounter.number_outpatient,
+        "number_emergency": encounter.number_emergency,
+        "number_inpatient": encounter.number_inpatient,
+        "number_diagnoses": encounter.number_diagnoses,
+        "max_glu_serum": encounter.max_glu_serum,
+        "A1Cresult": encounter.A1Cresult,
+        "change": encounter.change,
+        "diabetesMed": encounter.diabetesMed,
+    }
+
+    f["diag_1"] = group_by_icd9(encounter.diag_1)
+    f["diag_2"] = group_by_icd9(encounter.diag_2)
+    f["diag_3"] = group_by_icd9(encounter.diag_3)
+
+    for db_field, feature in MEDICATION_DB_TO_FEATURE.items():
+        f[feature] = getattr(encounter, db_field)
+
+    dg = make_discharge_group(encounter.discharge_disposition_id)
+    f["discharge_group"] = dg
+    f["inpatient_x_discharge"] = make_inpatient_x_discharge(encounter.number_inpatient, dg)
+
+    return {k: f[k] for k in MODEL_FEATURES}
+
+
+def encounter_to_model_input(encounter, model):
+    """PredictionData 인스턴스 -> LightGBM 입력 DataFrame(1행)."""
+    features = encounter_to_features(encounter)
+    df = pd.DataFrame([features])
+
+    feature_names = list(model.feature_name_)
+    for col in feature_names:
+        if col not in df.columns:
+            df[col] = None
+    df = df[feature_names]
+
+    for col in NUMERIC_COLUMNS:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    categorical_columns = [c for c in feature_names if c not in NUMERIC_COLUMNS]
+    if hasattr(model, "booster_") and model.booster_.pandas_categorical:
+        for col, categories in zip(categorical_columns, model.booster_.pandas_categorical):
+            series = df[col].fillna("missing").astype(str)
+            if col in ("max_glu_serum", "A1Cresult"):
+                series = series.replace({"missing": "None", "nan": "None"})
+            elif col in ("race", "diag_1", "diag_2", "diag_3"):
+                series = series.replace({"nan": "missing", "None": "missing"})
+            else:
+                series = series.replace({"missing": "No", "nan": "No"})
+            df[col] = pd.Categorical(series, categories=categories)
+
+    return df
 
 
 def preprocess_for_lgbm(df, model):
@@ -128,6 +276,10 @@ def preprocess_for_lgbm(df, model):
         )
     else:
         df['inpatient_x_discharge'] = '0회_' + df['discharge_group'].astype(str)
+
+    for diag_col in ('diag_1', 'diag_2', 'diag_3'):
+        if diag_col in df.columns:
+            df[diag_col] = df[diag_col].apply(group_by_icd9)
 
     drop_columns = [
         'name',

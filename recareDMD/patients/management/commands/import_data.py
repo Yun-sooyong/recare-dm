@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from patients.models import PersonalInfo, PredictionData, MEDICATION_FIELDS
-from patients.preprocessing import MEDICATION_DB_TO_FEATURE
+from analysis.preprocessing import MEDICATION_DB_TO_FEATURE
 
 SEED = 42
 BASE_DATE = date(2023, 1, 1)

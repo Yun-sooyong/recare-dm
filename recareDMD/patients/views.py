@@ -1,12 +1,18 @@
 from analysis.models import ShapResult
+from analysis.preprocessing import (
+    encounter_to_model_input,
+    get_risk_label,
+    group_by_icd9,
+    load_model,
+)
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from patients.models import MEDICATION_FIELDS, PersonalInfo, PredictionData
 
-from .forms import PatientForm
-from .preprocessing import group_by_icd9
+from .forms import PatientForm, PredictionDataEditForm
 
 PAGE_SIZE = 20
 
@@ -73,6 +79,40 @@ def patient_delete(request, pk):
         request,
         "patients/patient_confirm_delete.html",
         {"patient": patient, "n_visits": patient.predictions.count()},
+    )
+
+
+# ---------------------------------------------------------------------------
+# 내원(PredictionData) 임상변수 수정 + 재예측
+# ---------------------------------------------------------------------------
+
+def encounter_update(request, visit_id):
+    encounter = get_object_or_404(PredictionData, visit_id=visit_id)
+    patient = encounter.patient
+    form = PredictionDataEditForm(request.POST or None, instance=encounter)
+
+    if request.method == "POST" and form.is_valid():
+        # 폼에 있는 필드만 갱신. 폼에 없는 19개 약물 등 기존 값은 instance 에서 보존.
+        obj = form.save(commit=False)
+        obj.save()
+
+        # 갱신된 row 로 재예측 (patients 전처리 기준 — 학습 그룹핑과 일치).
+        model = load_model()
+        model_input = encounter_to_model_input(obj, model)
+        probability = float(model.predict_proba(model_input)[0][1])
+
+        # readmit_proba 는 기존 코드(revisit/퇴원 준비도) 관행대로 퍼센트(0~100)로 저장.
+        obj.readmit_proba = round(probability * 100, 2)
+        obj.risk_level = get_risk_label(probability)
+        obj.predicted_at = timezone.now()
+        obj.save(update_fields=["readmit_proba", "risk_level", "predicted_at"])
+
+        return redirect("patients:patient_detail", pk=patient.pk)
+
+    return render(
+        request,
+        "patients/encounter_form.html",
+        {"form": form, "patient": patient, "encounter": encounter},
     )
 
 
