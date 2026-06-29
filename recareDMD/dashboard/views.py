@@ -1,15 +1,18 @@
 from django.shortcuts import render
 from patients.models import PersonalInfo, PredictionData
 
+def landing(request):
+    return render(request, "dashboard/landing.html")
+
 def home(request):
     total = PersonalInfo.objects.count()
-    high = PredictionData.objects.filter(risk_level='high').values('patient').distinct().count()
-    caution = PredictionData.objects.filter(risk_level='medium').values('patient').distinct().count()
-    normal = PredictionData.objects.filter(risk_level='low').values('patient').distinct().count()
+    high = PredictionData.objects.filter(risk_level='고위험').values('patient').distinct().count()
+    caution = PredictionData.objects.filter(risk_level='중위험').values('patient').distinct().count()
+    normal = PredictionData.objects.filter(risk_level='저위험').values('patient').distinct().count()
 
     high_patients = (
         PredictionData.objects
-        .filter(risk_level='high')
+        .filter(risk_level='고위험')
         .select_related('patient')
         .order_by('-predicted_at')[:10]
     )
@@ -22,9 +25,9 @@ def home(request):
     )
 
     risk_counts = [
-        PredictionData.objects.filter(risk_level='low').values('patient').distinct().count(),
-        PredictionData.objects.filter(risk_level='medium').values('patient').distinct().count(),
-        PredictionData.objects.filter(risk_level='high').values('patient').distinct().count(),
+        PredictionData.objects.filter(risk_level='저위험').values('patient').distinct().count(),
+        PredictionData.objects.filter(risk_level='중위험').values('patient').distinct().count(),
+        PredictionData.objects.filter(risk_level='고위험').values('patient').distinct().count(),
     ]
 
     return render(request, "dashboard/home.html", {
