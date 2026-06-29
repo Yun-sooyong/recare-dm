@@ -2,6 +2,8 @@ import os
 import pickle
 import pandas as pd
 import csv
+import numpy as np
+import math
 
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -130,8 +132,11 @@ def preprocess_for_lgbm(df, model):
 
     drop_columns = [
         'name',
+        'patient_nbr',
         'readmit_30d',
         'discharge_disposition_id',
+        '재입원_확률',
+        '위험등급',
     ]
 
     df = df.drop(columns=[col for col in drop_columns if col in df.columns])
@@ -255,6 +260,22 @@ def build_patient_data_from_request(request):
     }
 
     return data
+
+
+
+def get_prediction_url_id(prediction):
+    if not prediction:
+        return None
+
+    for attr in ['prediction_id', 'id', 'pk']:
+        value = getattr(prediction, attr, None)
+        if value:
+            return value
+
+    return None
+
+
+
 
 # =========================
 # 단일 환자 예측
@@ -557,43 +578,103 @@ def download_sample_pdf(request):
 #=========================
 # 저장 함수 — patients.PredictionData 에 연결 저장
 #=========================
+def clean_json_value(value):
+    if isinstance(value, dict):
+        return {key: clean_json_value(val) for key, val in value.items()}
+
+    if isinstance(value, list):
+        return [clean_json_value(item) for item in value]
+
+    if isinstance(value, np.integer):
+        return int(value)
+
+    if isinstance(value, np.floating):
+        if math.isnan(value):
+            return None
+        return float(value)
+
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+
+    try:
+        if pd.isna(value):
+            return None
+    except Exception:
+        pass
+
+    return value
+
+
+def clean_json_data(data):
+    return {key: clean_json_value(value) for key, value in data.items()}
+
+
 def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
-    # 환자 찾기/생성
-    nbr = patient_data.get('patient_nbr')
+    clean = clean_json_data(patient_data)
+
+    def safe_value(key, default=''):
+        value = clean.get(key)
+        if value is None or value == '':
+            return default
+        return value
+
+    def safe_int(key, default=0):
+        value = clean.get(key)
+        if value is None or value == '':
+            return default
+        try:
+            return int(value)
+        except Exception:
+            return default
+
+    nbr = clean.get('patient_nbr')
+
     if nbr:
         patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
     else:
-        max_nbr = PersonalInfo.objects.order_by('-patient_nbr').values_list('patient_nbr', flat=True).first() or 10000
+        max_nbr = (
+            PersonalInfo.objects
+            .order_by('-patient_nbr')
+            .values_list('patient_nbr', flat=True)
+            .first()
+            or 10000
+        )
         patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
 
-    max_eid = PatientPrediction.objects.order_by('-encounter_id').values_list('encounter_id', flat=True).first() or 0
+    max_eid = (
+        PatientPrediction.objects
+        .order_by('-encounter_id')
+        .values_list('encounter_id', flat=True)
+        .first()
+        or 0
+    )
 
     prediction_data = PatientPrediction.objects.create(
         patient=patient,
         encounter_id=max_eid + 1,
         visit_date=timezone.now().date(),
         is_inpatient=True,
-        race=patient_data.get('race', ''),
-        gender=patient_data.get('gender', ''),
-        age=patient_data.get('age') or patient_data.get('raw_age', ''),
-        time_in_hospital=int(patient_data.get('time_in_hospital') or 0),
-        num_lab_procedures=int(patient_data.get('num_lab_procedures') or 0),
-        num_procedures=int(patient_data.get('num_procedures') or 0),
-        num_medications=int(patient_data.get('num_medications') or 0),
-        number_outpatient=int(patient_data.get('number_outpatient') or 0),
-        number_emergency=int(patient_data.get('number_emergency') or 0),
-        number_inpatient=int(patient_data.get('number_inpatient') or 0),
-        number_diagnoses=int(patient_data.get('number_diagnoses') or 0),
-        diag_1=patient_data.get('diag_1', ''),
-        diag_2=patient_data.get('diag_2', ''),
-        diag_3=patient_data.get('diag_3', ''),
-        max_glu_serum=patient_data.get('max_glu_serum', ''),
-        A1Cresult=patient_data.get('A1Cresult', ''),
-        discharge_disposition_id=int(patient_data.get('discharge_disposition_id') or 1),
-        metformin=patient_data.get('metformin', 'No'),
-        insulin=patient_data.get('insulin', 'No'),
-        change=patient_data.get('change', ''),
-        diabetesMed=patient_data.get('diabetesMed', ''),
+        race=safe_value('race', 'Unknown'),
+        gender=safe_value('gender', 'Unknown'),
+        age=safe_value('age', safe_value('raw_age', 'Unknown')),
+        time_in_hospital=safe_int('time_in_hospital'),
+        num_lab_procedures=safe_int('num_lab_procedures'),
+        num_procedures=safe_int('num_procedures'),
+        num_medications=safe_int('num_medications'),
+        number_outpatient=safe_int('number_outpatient'),
+        number_emergency=safe_int('number_emergency'),
+        number_inpatient=safe_int('number_inpatient'),
+        number_diagnoses=safe_int('number_diagnoses'),
+        diag_1=safe_value('diag_1', 'Unknown'),
+        diag_2=safe_value('diag_2', 'Unknown'),
+        diag_3=safe_value('diag_3', 'Unknown'),
+        max_glu_serum=safe_value('max_glu_serum', 'None'),
+        A1Cresult=safe_value('A1Cresult', 'None'),
+        discharge_disposition_id=safe_int('discharge_disposition_id', 1),
+        metformin=safe_value('metformin', 'No'),
+        insulin=safe_value('insulin', 'No'),
+        change=safe_value('change', 'No'),
+        diabetesMed=safe_value('diabetesMed', 'No'),
         readmit_proba=float(probability_percent),
         risk_level=risk_label,
         predicted_at=timezone.now(),

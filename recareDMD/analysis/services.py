@@ -7,7 +7,7 @@ from django.db import transaction
 
 from .shap_storage import save_shap_results
 from .shap_utils import get_explainer
-from prediction.predict import preprocess_for_lgbm, save_prediction_result_to_db
+from analysis.preprocessing import preprocess_for_lgbm, save_prediction_result_to_db
 
 
 logger = logging.getLogger(__name__)

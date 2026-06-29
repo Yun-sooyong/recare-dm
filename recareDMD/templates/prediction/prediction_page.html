@@ -183,6 +183,30 @@
                 grid-template-columns: 1fr;
             }
         }
+        .top-action-row {
+            display: flex;
+            justify-content: flex-end;
+            margin: -6px 0 18px;
+        }
+
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 16px;
+            border-radius: 8px;
+            background: var(--main-color);
+            color: var(--white) !important;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .home-link:hover {
+            opacity: 0.9;
+        }
+
     </style>
 </head>
 
@@ -345,6 +369,10 @@
                 </div>
 
                 <div class="button-row">
+                    <a href="{% url 'dashboard:home' %}" class="btn btn-secondary home-action-btn">
+                        메인으로 가기
+                    </a>
+
                     <button type="submit" class="btn btn-primary">
                         재입원 위험도 예측
                     </button>
