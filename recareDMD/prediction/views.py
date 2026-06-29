@@ -15,179 +15,21 @@ from patients.models import PersonalInfo, PredictionData as PatientPrediction
 from .models import PredictionData
 from analysis.services import single_predict as save_prediction_with_shap
 from analysis.services import bulk_predict as save_bulk_prediction_with_shap
+from analysis.preprocessing import (
+    preprocess_for_lgbm,
+    age_to_group,
+    get_risk_label,
+    get_risk_message,
+    load_model,
+    save_prediction_result_to_db,
+    clean_json_data,
+)
 
-# =========================
-# 모델 로드
-# =========================
 
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'lgbm_model.pkl')
 
 
-def load_model():
-    with open(MODEL_PATH, 'rb') as f:
-        model = pickle.load(f)
-    return model
 
-
-# =========================
-# 위험 등급 함수
-# =========================
-
-def get_risk_label(probability):
-    if probability >= 0.7:
-        return '고위험'
-    elif probability >= 0.4:
-        return '중위험'
-    else:
-        return '저위험'
-
-
-def get_risk_message(risk_label):
-    if risk_label == '고위험':
-        return '재입원 가능성이 높은 환자입니다. 퇴원 후 추적 관찰과 추가 상담이 필요합니다.'
-    elif risk_label == '중위험':
-        return '재입원 가능성이 중간 수준입니다. 주요 위험 요인을 확인하고 관리가 필요합니다.'
-    else:
-        return '현재 입력 정보 기준으로 재입원 위험이 낮은 편입니다. 기본적인 사후 관리는 유지해야 합니다.'
-
-
-# =========================
-# 모델 입력 전처리
-# =========================
-
-NUMERIC_COLUMNS = [
-    'time_in_hospital',
-    'num_lab_procedures',
-    'num_procedures',
-    'num_medications',
-    'number_outpatient',
-    'number_emergency',
-    'number_inpatient',
-    'number_diagnoses',
-]
-
-
-def age_to_group(age_value):
-    try:
-        age = int(age_value)
-    except Exception:
-        return '[60-70)'
-
-    if age < 10:
-        return '[0-10)'
-    elif age < 20:
-        return '[10-20)'
-    elif age < 30:
-        return '[20-30)'
-    elif age < 40:
-        return '[30-40)'
-    elif age < 50:
-        return '[40-50)'
-    elif age < 60:
-        return '[50-60)'
-    elif age < 70:
-        return '[60-70)'
-    elif age < 80:
-        return '[70-80)'
-    elif age < 90:
-        return '[80-90)'
-    else:
-        return '[90-100)'
-
-
-def make_discharge_group(value):
-    try:
-        value = int(value)
-    except Exception:
-        return 'Other/Unknown'
-
-    if value == 1:
-        return 'Home'
-    elif value == 6:
-        return 'Home_Health_Service'
-    elif value in [2, 3, 4, 5, 10, 22, 23, 24, 27, 28, 29, 30]:
-        return 'Transfer/Facility'
-    else:
-        return 'Other/Unknown'
-
-
-def preprocess_for_lgbm(df, model):
-    df = df.copy()
-
-    if 'discharge_disposition_id' in df.columns:
-        df['discharge_group'] = df['discharge_disposition_id'].apply(make_discharge_group)
-    else:
-        df['discharge_group'] = 'Other/Unknown'
-
-    if 'number_inpatient' in df.columns:
-        df['number_inpatient'] = pd.to_numeric(
-            df['number_inpatient'],
-            errors='coerce'
-        ).fillna(0).astype(int)
-
-        df['inpatient_x_discharge'] = (
-            df['number_inpatient'].astype(str)
-            + '회_'
-            + df['discharge_group'].astype(str)
-        )
-    else:
-        df['inpatient_x_discharge'] = '0회_' + df['discharge_group'].astype(str)
-
-    drop_columns = [
-        'name',
-        'readmit_30d',
-        'discharge_disposition_id',
-    ]
-
-    df = df.drop(columns=[col for col in drop_columns if col in df.columns])
-
-    feature_names = list(model.feature_name_)
-
-    for col in feature_names:
-        if col not in df.columns:
-            df[col] = None
-
-    df = df[feature_names]
-
-    for col in NUMERIC_COLUMNS:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-
-    categorical_columns = [col for col in feature_names if col not in NUMERIC_COLUMNS]
-
-    if hasattr(model, 'booster_') and model.booster_.pandas_categorical:
-        categorical_values = model.booster_.pandas_categorical
-
-        for col, categories in zip(categorical_columns, categorical_values):
-            df[col] = df[col].fillna('missing').astype(str)
-
-            if col in ['max_glu_serum', 'A1Cresult']:
-                df[col] = df[col].replace({
-                    'missing': 'None',
-                    'nan': 'None',
-                    'None': 'None',
-                })
-
-            elif col in ['race', 'diag_1', 'diag_2', 'diag_3']:
-                df[col] = df[col].replace({
-                    'nan': 'missing',
-                    'None': 'missing',
-                })
-
-            else:
-                df[col] = df[col].replace({
-                    'missing': 'No',
-                    'nan': 'No',
-                })
-
-            df[col] = pd.Categorical(df[col], categories=categories)
-
-    return df
-
-
-# =========================
-# 페이지 렌더링
-# =========================
 
 def prediction_page(request):
     patient_cart = request.session.get('patient_cart', [])
@@ -560,55 +402,8 @@ def download_sample_pdf(request):
 
     return response
 
-#=========================
-# 저장 함수 — patients.PredictionData 에 연결 저장
-#=========================
-def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
-    clean = clean_json_data(patient_data)
 
-    # 환자 찾기/생성 (patient_nbr 기반, 없으면 자동 생성)
-    nbr = clean.get('patient_nbr')
-    if nbr:
-        patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
-    else:
-        max_nbr = PersonalInfo.objects.order_by('-patient_nbr').values_list('patient_nbr', flat=True).first() or 10000
-        patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
 
-    # encounter_id 자동 생성
-    max_eid = PatientPrediction.objects.order_by('-encounter_id').values_list('encounter_id', flat=True).first() or 0
-
-    prediction_data = PatientPrediction.objects.create(
-        patient=patient,
-        encounter_id=max_eid + 1,
-        visit_date=timezone.now().date(),
-        is_inpatient=True,
-        race=clean.get('race', ''),
-        gender=clean.get('gender', ''),
-        age=clean.get('age') or clean.get('raw_age', ''),
-        time_in_hospital=int(clean.get('time_in_hospital') or 0),
-        num_lab_procedures=int(clean.get('num_lab_procedures') or 0),
-        num_procedures=int(clean.get('num_procedures') or 0),
-        num_medications=int(clean.get('num_medications') or 0),
-        number_outpatient=int(clean.get('number_outpatient') or 0),
-        number_emergency=int(clean.get('number_emergency') or 0),
-        number_inpatient=int(clean.get('number_inpatient') or 0),
-        number_diagnoses=int(clean.get('number_diagnoses') or 0),
-        diag_1=clean.get('diag_1', ''),
-        diag_2=clean.get('diag_2', ''),
-        diag_3=clean.get('diag_3', ''),
-        max_glu_serum=clean.get('max_glu_serum', ''),
-        A1Cresult=clean.get('A1Cresult', ''),
-        discharge_disposition_id=int(clean.get('discharge_disposition_id') or 1),
-        metformin=clean.get('metformin', 'No'),
-        insulin=clean.get('insulin', 'No'),
-        change=clean.get('change', ''),
-        diabetesMed=clean.get('diabetesMed', ''),
-        readmit_proba=float(probability_percent),
-        risk_level=risk_label,
-        predicted_at=timezone.now(),
-    )
-
-    return prediction_data
 #=========================
 # 환자 장바구니 기능
 #=========================
@@ -742,32 +537,5 @@ def predict_patient_cart(request):
             'cart_count': len(request.session.get('patient_cart', [])),
         })
         
-def clean_json_value(value):
-    if isinstance(value, dict):
-        return {key: clean_json_value(val) for key, val in value.items()}
-
-    if isinstance(value, list):
-        return [clean_json_value(item) for item in value]
-
-    if isinstance(value, np.integer):
-        return int(value)
-
-    if isinstance(value, np.floating):
-        if math.isnan(value):
-            return None
-        return float(value)
-
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-
-    try:
-        if pd.isna(value):
-            return None
-    except Exception:
-        pass
-
-    return value
 
 
-def clean_json_data(data):
-    return {key: clean_json_value(value) for key, value in data.items()}
