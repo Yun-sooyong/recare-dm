@@ -70,24 +70,22 @@ def bulk_predict(dataset, model):
                 risk_label=risk_label,
             )
 
-            try:
-                save_shap_results(
-                    prediction=prediction_data,
-                    model_input=model_input_batch.iloc[[i]],
-                    explainer=explainer,
-                )
-            except Exception as e:
-                logger.warning(f"[bulk_predict] index={i} SHAP 저장 실패 (예측은 저장됨): {e}")
+            save_shap_results(
+                prediction=prediction_data,
+                model_input=model_input_batch.iloc[[i]],
+                explainer=explainer,
+            )
 
             results.append(prediction_data)
 
         except Exception as e:
+            print(f"[bulk_predict] index={i} 실패: {e}")
             logger.error(f"[bulk_predict] index={i} 처리 실패: {e}", exc_info=True)
             failed_indices.append(i)
             continue
 
     if failed_indices:
-        logger.warning(
+        print(
             f"[bulk_predict] 총 {len(dataset)}건 중 {len(failed_indices)}건 실패 "
             f"(indices={failed_indices})"
         )
