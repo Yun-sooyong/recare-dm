@@ -1,37 +1,36 @@
-import os
-import pickle
-import pandas as pd
 import csv
 import math
+import os
+import pickle
+
 import numpy as np
-
-from django.conf import settings
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.utils import timezone
-
-from patients.models import PersonalInfo, PredictionData as PatientPrediction
-from analysis.services import single_predict as save_prediction_with_shap
-from analysis.services import bulk_predict as save_bulk_prediction_with_shap
+import pandas as pd
 from analysis.preprocessing import (
-    preprocess_for_lgbm,
     age_to_group,
+    get_prediction_url_id,
     get_risk_label,
     get_risk_message,
-    get_prediction_url_id,
     load_model,
+    preprocess_for_lgbm,
 )
-
+from analysis.services import bulk_predict as save_bulk_prediction_with_shap
+from analysis.services import single_predict as save_prediction_with_shap
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from patients.models import PersonalInfo
+from patients.models import PredictionData as PatientPrediction
 
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'lgbm_model.pkl')
 
 from analysis.preprocessing import (
-    preprocess_for_lgbm,
     age_to_group,
+    get_prediction_url_id,
     get_risk_label,
     get_risk_message,
-    get_prediction_url_id,
     load_model,
+    preprocess_for_lgbm,
 )
 
 
@@ -250,7 +249,7 @@ def bulk_predict(request):
                     'error': 'CSV 파일을 업로드해주세요.'
                 })
 
-            df = pd.read_csv(csv_file)
+            df = pd.read_csv(csv_file, encoding='utf-8-sig')
             display_df = df.copy()
 
             model = load_model()
@@ -344,8 +343,8 @@ def download_sample_csv(request):
 
 def download_sample_pdf(request):
     try:
-        from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
     except ImportError:
         return HttpResponse('PDF 생성을 위해 reportlab 패키지를 설치해주세요: pip install reportlab')
 
