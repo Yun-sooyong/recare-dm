@@ -1,227 +1,344 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>대시보드 — ReCare DM</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { display: flex; font-family: 'Segoe UI', sans-serif; background: #D8D1C4; }
+{% extends 'base.html' %}
+{% load static %}
 
-    /* 사이드바 */
-    .sidebar {
-      width: 220px; min-height: 100vh; background: #1E2530;
-      padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 4px;
-      position: fixed;
-    } 
-    .sidebar-logo { color: white; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
-    .sidebar a {
-      display: block; color: #FFFDF8; text-decoration: none;
-      padding: 10px 12px; border-radius: 8px; font-size: .88rem;
+{% block title %}대시보드 — ReCare DM{% endblock %}
+
+{% block extra_style %}
+<style>
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    border-left: 4px solid transparent;
+  }
+
+  .stat-card p {
+    font-size: .78rem;
+    color: #64748B;
+    margin-bottom: 6px;
+  }
+
+  .stat-card h2 {
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  .stat-card small {
+    font-size: .72rem;
+    color: #94A3B8;
+  }
+
+  .card-total {
+    border-left-color: #1B4F8A;
+  }
+
+  .card-high {
+    border-left-color: #DC2626;
+  }
+
+  .card-caution {
+    border-left-color: #D97706;
+  }
+
+  .card-normal {
+    border-left-color: #059669;
+  }
+
+  .mid-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .dashboard-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .dashboard-card.padded {
+    padding: 1.2rem;
+  }
+
+  .card-header {
+    padding: .9rem 1.2rem;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  .card-header a {
+    font-size: .78rem;
+    color: #1B4F8A;
+    text-decoration: none;
+  }
+
+  .chart-header {
+    padding: 0;
+    border: none;
+    margin-bottom: 1rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+  }
+
+  th {
+    padding: 9px 12px;
+    text-align: left;
+    color: #94A3B8;
+    font-size: .72rem;
+    text-transform: uppercase;
+    background: #FFFDF8;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-top: 1px solid #F1F5F9;
+  }
+
+  tr:hover td {
+    background: #F8FAFF;
+  }
+
+  .recent-section {
+    background: #FFFDF8;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .quick-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .quick-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+
+  .quick-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .empty-row {
+    text-align: center;
+    padding: 2rem;
+    color: #94A3B8;
+  }
+
+  @media (max-width: 1100px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
-    .sidebar a:hover, .sidebar a.active { background: #2E3F5C; color: white; }
 
-    /* 본문 */
-    .main { margin-left: 220px; padding: 2rem; width: 100%; }
-
-    /* 통계 카드 */
-    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.5rem; }
-    .stat-card {
-      background: #FFFDF8; border-radius: 12px; padding: 1.2rem 1.4rem;
-      border-left: 4px solid transparent;
+    .mid-grid {
+      grid-template-columns: 1fr;
     }
-    .stat-card p { font-size: .78rem; color: #64748B; margin-bottom: 6px; }
-    .stat-card h2 { font-size: 2rem; font-weight: 800; }
-    .stat-card small { font-size: .72rem; color: #94A3B8; }
-    .card-total   { border-left-color: #1B4F8A; }
-    .card-high    { border-left-color: #DC2626; }
-    .card-caution { border-left-color: #D97706; }
-    .card-normal  { border-left-color: #059669; }
+  }
 
-    /* 중간 2열 */
-    .mid-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 1.5rem; }
-    .card { background: #FFFDF8; border-radius: 12px; overflow: hidden; }
-    .card-header {
-      padding: .9rem 1.2rem; border-bottom: 1px solid #E2E8F0;
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: .88rem; font-weight: 700;
+  @media (max-width: 700px) {
+    .stat-grid,
+    .quick-grid {
+      grid-template-columns: 1fr;
     }
-    .card-header a { font-size: .78rem; color: #1B4F8A; text-decoration: none; }
+  }
+</style>
+{% endblock %}
 
-    /* 테이블 */
-    table { width: 100%; border-collapse: collapse; font-size: .83rem; }
-    th { padding: 9px 12px; text-align: left; color: #94A3B8; font-size: .72rem;
-         text-transform: uppercase; background: #FFFDF8; }
-    td { padding: 10px 12px; border-top: 1px solid #F1F5F9; }
-    tr:hover td { background: #F8FAFF; }
-
-    /* 최근 기록 */
-    .recent-section { background: #FFFDF8; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-
-    /* 빠른 링크 */
-    .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .quick-card {
-      background: #FFFDF8; border-radius: 12px; padding: 1rem 1.2rem;
-      display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;
-    }
-    .quick-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
-    .quick-icon { width: 40px; height: 40px; border-radius: 10px;
-                  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-  </style>
-</head>
-<body>
-
-<!-- 사이드바 -->
-<nav class="sidebar">
-  <div class="sidebar-logo">🏥 ReCare DM</div>
-  <a href="{% url 'patients:patient_list' %}">환자 목록</a>
-  <a href="{% url 'prediction:prediction_page' %}">위험 예측</a>
-  <a href="{% url 'patients:patient_list' %}">퇴원 안내</a>
-</nav>
-
-<!-- 본문 -->
-<div class="main">
-
-  <!-- 통계 카드 -->
-  <div class="stat-grid">
-    <div class="stat-card card-total">
-      <p>전체 예측 환자</p>
-      <h2 style="color:#1B4F8A;">{{ total }}</h2>
-      <small>등록 기준</small>
-    </div>
-    <div class="stat-card card-high">
-      <p>고위험 환자</p>
-      <h2 style="color:#DC2626;">{{ high }}</h2>
-      <small>재입원 위험도 60% 이상</small>
-    </div>
-    <div class="stat-card card-caution">
-      <p>주의 환자</p>
-      <h2 style="color:#D97706;">{{ caution }}</h2>
-      <small>중간 위험 등급</small>
-    </div>
-    <div class="stat-card card-normal">
-      <p>정상 환자</p>
-      <h2 style="color:#059669;">{{ normal }}</h2>
-      <small>저위험 등급</small>
-    </div>
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card card-total">
+    <p>전체 예측 환자</p>
+    <h2 style="color:#1B4F8A;">{{ total }}</h2>
+    <small>등록 기준</small>
   </div>
 
-  <!-- 중간 2열 -->
-  <div class="mid-grid">
-
-    <!-- 고위험 환자 현황 -->
-    <div class="card">
-      <div class="card-header">
-        <span>⚠️ 고위험 환자 현황</span>
-        <a href="{% url 'patients:patient_list' %}">전체 보기 →</a>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>환자명</th><th>연령대</th><th>진단군</th><th>위험도</th><th>등급</th>
-          </tr>
-        </thead>
-      <tbody>
-      {% for p in high_patients %}
-      <tr>
-        <td>{{ p.patient.patient_nbr }}</td>
-        <td>{{ p.age }}</td>
-        <td>{{ p.diag_1 }}</td>
-        <td>{{ p.readmit_proba|floatformat:1 }}%</td>
-        <td><span style="color:#DC2626;">고위험</span></td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">데이터 없음</td></tr>
-      {% endfor %}
-      </tbody>
-      </table>
-    </div>
-
-    <!-- 차트 -->
-    <div class="card" style="padding:1.2rem;">
-      <div class="card-header" style="padding:0; border:none; margin-bottom:1rem;">
-        위험 등급별 분포
-      </div>
-      <canvas id="riskChart"></canvas>
-    </div>
-
+  <div class="stat-card card-high">
+    <p>고위험 환자</p>
+    <h2 style="color:#DC2626;">{{ high }}</h2>
+    <small>재입원 위험도 60% 이상</small>
   </div>
 
-  <!-- 최근 진료기록 -->
-  <div class="recent-section">
+  <div class="stat-card card-caution">
+    <p>주의 환자</p>
+    <h2 style="color:#D97706;">{{ caution }}</h2>
+    <small>중간 위험 등급</small>
+  </div>
+
+  <div class="stat-card card-normal">
+    <p>정상 환자</p>
+    <h2 style="color:#059669;">{{ normal }}</h2>
+    <small>저위험 등급</small>
+  </div>
+</div>
+
+<div class="mid-grid">
+  <div class="dashboard-card">
     <div class="card-header">
-      <span>🕐 최근 진료기록</span>
+      <span>고위험 환자 현황</span>
+      <a href="{% url 'patients:patient_list' %}">전체 보기 →</a>
     </div>
+
     <table>
       <thead>
         <tr>
-          <th>환자코드</th><th>환자명</th><th>위험등급</th><th>입원기간</th><th>예측일시</th>
+          <th>환자코드</th>
+          <th>환자명</th>
+          <th>연령</th>
+          <th>진단군</th>
+          <th>위험률</th>
+          <th>등급</th>
         </tr>
       </thead>
+
       <tbody>
-      {% for p in recent %}
-      <tr>
-        <td>{{ p.encounter_id }}</td>
-        <td>{{ p.patient.patient_nbr }}</td>
-        <td>{{ p.risk_level }}</td>
-        <td>{{ p.time_in_hospital }}일</td>
-        <td>{{ p.predicted_at|date:"Y-m-d H:i" }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5" style="text-align:center; padding:2rem; color:#94A3B8;">데이터 없음</td></tr>
-      {% endfor %}
+        {% for p in high_patients %}
+          <tr>
+            <td>{{ p.patient.patient_nbr }}</td>
+            <td>{{ p.patient.patient_name }}</td>
+            <td>{{ p.age }}</td>
+            <td>{{ p.diag_1 }}</td>
+            <td>{{ p.readmit_proba|floatformat:1 }}%</td>
+            <td><span style="color:#DC2626; font-weight:800;">고위험</span></td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="empty-row">데이터 없음</td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
 
-  <!-- 빠른 링크 -->
-  <div class="quick-grid">
-    <a href="{% url 'prediction:prediction_page' %}" class="quick-card">
-      <div class="quick-icon" style="background:#EFF6FF;">👤</div>
-      <div>
-        <div style="font-weight:700; font-size:.88rem;">새 환자 예측</div>
-        <div style="font-size:.75rem; color:#94A3B8;">개별 입력 / CSV 대량</div>
-      </div>
-    </a>
-    <a href="{% url 'patients:patient_list' %}" class="quick-card">
-      <div class="quick-icon" style="background:#F0FDF4;">👥</div>
-      <div>
-        <div style="font-weight:700; font-size:.88rem;">환자 목록</div>
-        <div style="font-size:.75rem; color:#94A3B8;">전체 환자 조회·관리</div>
-      </div>
-    </a>
-    <a href="{% url 'patients:patient_list' %}" class="quick-card">
-      <div class="quick-icon" style="background:#ECFDF5;">📋</div>
-      <div>
-        <div style="font-weight:700; font-size:.88rem;">퇴원 안내서</div>
-        <div style="font-size:.75rem; color:#94A3B8;">환자 선택 후 퇴원 준비도 확인</div>
-      </div>
-    </a>
+  <div class="dashboard-card padded">
+    <div class="card-header chart-header">
+      위험 등급별 분포
+    </div>
+    <canvas id="riskChart"></canvas>
   </div>
-
 </div>
 
+<div class="recent-section">
+  <div class="card-header">
+    <span>최근 진료기록</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>환자코드</th>
+        <th>환자명</th>
+        <th>위험등급</th>
+        <th>입원기간</th>
+        <th>예측일시</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for p in recent %}
+        <tr>
+          <td>{{ p.patient.patient_nbr }}</td>
+          <td>{{ p.patient.patient_name }}</td>
+          <td>{{ p.risk_level }}</td>
+          <td>{{ p.time_in_hospital }}일</td>
+          <td>{{ p.predicted_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="empty-row">데이터 없음</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="quick-grid">
+  <a href="{% url 'prediction:prediction_page' %}" class="quick-card">
+    <div class="quick-icon" style="background:#EFF6FF;">＋</div>
+    <div>
+      <div style="font-weight:700; font-size:.88rem;">새 환자 예측</div>
+      <div style="font-size:.75rem; color:#94A3B8;">개별 입력 / CSV 대량</div>
+    </div>
+  </a>
+
+  <a href="{% url 'patients:patient_list' %}" class="quick-card">
+    <div class="quick-icon" style="background:#F0FDF4;">목</div>
+    <div>
+      <div style="font-weight:700; font-size:.88rem;">환자 목록</div>
+      <div style="font-size:.75rem; color:#94A3B8;">전체 환자 조회·관리</div>
+    </div>
+  </a>
+
+  <a href="{% url 'patients:patient_list' %}" class="quick-card">
+    <div class="quick-icon" style="background:#ECFDF5;">퇴</div>
+    <div>
+      <div style="font-weight:700; font-size:.88rem;">퇴원 안내서</div>
+      <div style="font-size:.75rem; color:#94A3B8;">환자 선택 후 퇴원 준비도 확인</div>
+    </div>
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_script %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-new Chart(document.getElementById('riskChart'), {
-  type: 'bar',
-  data: {
-    labels: ['정상', '주의', '고위험'],
-    datasets: [{
-      data: [{{ risk_counts.0 }}, {{ risk_counts.1 }}, {{ risk_counts.2 }}],
-      backgroundColor: ['#059669', '#D97706', '#DC2626'],
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { display: false } },
-      y: { grid: { color: '#F1F5F9' }, ticks: { stepSize: 1 } }
+  new Chart(document.getElementById('riskChart'), {
+    type: 'bar',
+    data: {
+      labels: ['정상', '주의', '고위험'],
+      datasets: [{
+        data: [{{ risk_counts.0 }}, {{ risk_counts.1 }}, {{ risk_counts.2 }}],
+        backgroundColor: ['#059669', '#D97706', '#DC2626'],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { display: false }
+        },
+        y: {
+          grid: { color: '#F1F5F9' },
+          ticks: { stepSize: 1 }
+        }
+      }
     }
-  }
-});
+  });
 </script>
-
-</body>
-</html>
+{% endblock %}
