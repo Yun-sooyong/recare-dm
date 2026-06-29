@@ -129,10 +129,18 @@
 {% block content %}
 <div class="patient-page-header">
   <h1>{% if mode == "create" %}환자 추가{% else %}환자 수정{% endif %}</h1>
-  <div class="subtitle">환자코드만 등록합니다 · 임상 입력은 예측 화면에서</div>
+  {% if mode == "create" %}
+    <div class="subtitle">환자코드만 등록합니다 · 임상 입력은 예측 화면에서</div>
+  {% else %}
+    <div class="subtitle">
+      {{ patient.patient_name|default:'이름 없음' }} · 환자코드 {{ patient.patient_nbr }} ·
+      내원별 임상변수를 수정합니다
+    </div>
+  {% endif %}
 </div>
 
 <main class="page-body">
+  {% if mode == "create" %}
   <div class="content-card form-card">
     <form method="post">
       {% csrf_token %}
@@ -154,8 +162,7 @@
       </div>
     </form>
   </div>
-
-  {% if mode == "update" %}
+  {% else %}
   <div class="content-card enc-card">
     <h2>내원별 임상변수 수정</h2>
     {% for e in encounters %}
@@ -169,6 +176,9 @@
     {% empty %}
       <p class="muted">내원 기록이 없습니다.</p>
     {% endfor %}
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">목록으로</a>
+    </div>
   </div>
   {% endif %}
 </main>
