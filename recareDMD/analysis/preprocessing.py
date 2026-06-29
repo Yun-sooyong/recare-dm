@@ -1,17 +1,16 @@
+import csv
+import math
 import os
 import pickle
-import pandas as pd
-import csv
+
 import numpy as np
-import math
-
+import pandas as pd
 from django.conf import settings
-from django.shortcuts import render, redirect
 from django.http import HttpResponse
-
+from django.shortcuts import redirect, render
 from django.utils import timezone
-from patients.models import PersonalInfo, PredictionData as PatientPrediction
-
+from patients.models import PersonalInfo
+from patients.models import PredictionData as PatientPrediction
 
 # =========================
 # 모델 로드
@@ -532,8 +531,8 @@ def download_sample_csv(request):
 #=========================
 def download_sample_pdf(request):
     try:
-        from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
     except ImportError:
         return HttpResponse('PDF 생성을 위해 reportlab 패키지를 설치해주세요: pip install reportlab')
 
@@ -628,9 +627,13 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
             return default
 
     nbr = clean.get('patient_nbr')
+    patient_name = safe_value('name', '')
 
     if nbr:
-        patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
+        patient, created = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
+        if patient_name and (created or not patient.patient_name):
+            patient.patient_name = patient_name
+            patient.save(update_fields=['patient_name'])
     else:
         max_nbr = (
             PersonalInfo.objects
@@ -639,7 +642,10 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
             .first()
             or 10000
         )
-        patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
+        patient = PersonalInfo.objects.create(
+            patient_nbr=max_nbr + 1,
+            patient_name=patient_name,
+        )
 
     max_eid = (
         PatientPrediction.objects

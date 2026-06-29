@@ -1,10 +1,11 @@
+from analysis.models import ShapResult
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 
-from analysis.models import ShapResult
+from patients.models import MEDICATION_FIELDS, PersonalInfo, PredictionData
+
 from .forms import PatientForm
-from .models import MEDICATION_FIELDS, PersonalInfo, PredictionData
 from .preprocessing import group_by_icd9
 
 PAGE_SIZE = 20
@@ -21,6 +22,8 @@ def patient_list(request):
         last_visit=Max("predictions__visit_date"),
         latest_age=Subquery(latest.values("age")[:1]),
         latest_gender=Subquery(latest.values("gender")[:1]),
+        risk_level=Subquery(latest.values('risk_level')[:1]),
+        # latest_name=Subquery(latest.values('patient_name')[:1]),
     ).order_by("patient_nbr")
 
     if q:
