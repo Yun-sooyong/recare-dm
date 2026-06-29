@@ -1,216 +1,194 @@
+{% extends 'base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>환자 재입원 위험도 예측</title>
-    <link rel="stylesheet" href="{% static 'css/common.css' %}" />
 
-    <style>
-        /* common.css에 없는, 이 페이지 전용 보조 스타일만 추가 */
+{% block title %}환자 재입원 위험도 예측{% endblock %}
 
-        .section-title {
-            margin: 26px 0 13px;
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--point-color);
-        }
+{% block extra_style %}
+<style>
+    .section-title {
+        margin: 26px 0 13px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--point-color);
+    }
 
-        .section-title:first-of-type {
-            margin-top: 0;
-        }
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
 
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 17px 19px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 7px;
+        color: var(--main-color);
+    }
+
+    .form-group input,
+    .form-group select {
+        height: 43px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0 12px;
+        font-size: 14px;
+        background: var(--bg-card);
+        color: var(--text-main);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--point-color);
+        box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
+    }
+
+    .hint {
+        margin-top: 6px;
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    .csv-example {
+        margin-top: 15px;
+        padding: 18px;
+        background: var(--bg-soft);
+        border-radius: 14px;
+        font-size: 12px;
+        color: var(--text-main);
+        line-height: 1.7;
+    }
+
+    .csv-example > strong {
+        display: block;
+        color: var(--main-color);
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+
+    .csv-example-desc {
+        margin: 0 0 14px;
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .csv-download-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .download-btn {
+        display: inline-block;
+        text-decoration: none;
+        background: var(--point-color);
+        color: var(--white) !important;
+        padding: 11px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .download-btn.secondary {
+        background: var(--main-color);
+    }
+
+    .download-btn:hover {
+        opacity: 0.9;
+    }
+
+    .selected-file {
+        margin: 14px 0;
+        padding: 12px;
+        border-radius: 10px;
+        background: var(--main-color);
+        color: var(--white);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .selected-file span {
+        color: var(--point-color);
+    }
+
+    .cart-count {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .cart-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .cart-item {
+        padding: 13px 14px;
+        background: var(--bg-soft);
+        border-radius: 12px;
+    }
+
+    .cart-item strong {
+        display: block;
+        color: var(--main-color);
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .cart-item span {
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+
+    .empty-cart {
+        background: var(--bg-soft);
+        padding: 16px;
+        border-radius: 12px;
+        color: var(--main-color);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .error {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+        padding: 14px 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .home-action-btn {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 900px) {
         .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 17px 19px;
+            grid-template-columns: 1fr;
         }
+    }
+</style>
+{% endblock %}
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-size: 13px;
-            font-weight: 800;
-            margin-bottom: 7px;
-            color: var(--main-color);
-        }
-
-        .form-group input,
-        .form-group select {
-            height: 43px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 0 12px;
-            font-size: 14px;
-            background: var(--bg-card);
-            color: var(--text-main);
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--point-color);
-            box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
-        }
-
-        .hint {
-            margin-top: 6px;
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        .csv-example {
-            margin-top: 15px;
-            padding: 18px;
-            background: var(--bg-soft);
-            border-radius: 14px;
-            font-size: 12px;
-            color: var(--text-main);
-            line-height: 1.7;
-        }
-
-        .csv-example > strong {
-            display: block;
-            color: var(--main-color);
-            font-size: 15px;
-            margin-bottom: 8px;
-        }
-
-        .csv-example-desc {
-            margin: 0 0 14px;
-            color: var(--text-muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .csv-download-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .download-btn {
-            display: inline-block;
-            text-decoration: none;
-            background: var(--point-color);
-            color: var(--white) !important;
-            padding: 11px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 800;
-            text-align: center;
-        }
-
-        .download-btn.secondary {
-            background: var(--main-color);
-        }
-
-        .download-btn:hover {
-            opacity: 0.9;
-        }
-
-        .selected-file {
-            margin: 14px 0;
-            padding: 12px;
-            border-radius: 10px;
-            background: var(--main-color);
-            color: var(--white);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .selected-file span {
-            color: var(--point-color);
-        }
-
-        .cart-count {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .cart-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .cart-item {
-            padding: 13px 14px;
-            background: var(--bg-soft);
-            border-radius: 12px;
-        }
-
-        .cart-item strong {
-            display: block;
-            color: var(--main-color);
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        .cart-item span {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .empty-cart {
-            background: var(--bg-soft);
-            padding: 16px;
-            border-radius: 12px;
-            color: var(--main-color);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .error {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-            padding: 14px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 800;
-        }
-
-        @media (max-width: 900px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .top-action-row {
-            display: flex;
-            justify-content: flex-end;
-            margin: -6px 0 18px;
-        }
-
-        .home-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 40px;
-            padding: 0 16px;
-            border-radius: 8px;
-            background: var(--main-color);
-            color: var(--white) !important;
-            font-size: 13px;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        .home-link:hover {
-            opacity: 0.9;
-        }
-
-    </style>
-</head>
-
-<body>
+{% block content %}
 <div class="page-wrap">
 
     <div class="hero">
@@ -370,7 +348,7 @@
 
                 <div class="button-row">
                     <a href="{% url 'dashboard:home' %}" class="btn btn-secondary home-action-btn">
-                        메인으로 가기
+                        대시보드로 가기
                     </a>
 
                     <button type="submit" class="btn btn-primary">
@@ -433,9 +411,7 @@
                                 CSV 작성 안내 PDF
                             </a>
                         </div>
-
                     </div>
-
                 </form>
             </div>
 
@@ -482,12 +458,13 @@
                     </p>
                 {% endif %}
             </div>
-
         </div>
 
     </div>
 </div>
+{% endblock %}
 
+{% block extra_script %}
 <script>
     const dropArea = document.getElementById('drop-area');
     const fileInput = document.getElementById('csv-file-input');
@@ -552,6 +529,4 @@
         dropMessage.style.display = 'none';
     }
 </script>
-
-</body>
-</html>
+{% endblock %}

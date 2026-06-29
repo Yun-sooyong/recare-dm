@@ -1,114 +1,379 @@
+{% extends 'base.html' %}
 {% load static %}
-{% comment %}
-TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동일 방침).
-현재 base.html 이 비어 있어 자립형 HTML 로 작성함.
-{% endcomment %}
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>환자 {{ patient.patient_nbr }} — 상세</title>
-  <link rel="stylesheet" href="{% static 'css/patients.css' %}">
-</head>
-<body>
-  <!-- 환자 헤더 -->
-  <header class="page-header">
-    <a class="back-link" href="{% url 'patients:patient_list' %}">← 환자 목록</a>
-    <h1>환자 {{ patient.patient_name|default:'-' }} {{ patient.patient_nbr }}</h1>
-    <div class="subtitle">
-      {{ latest_age|default:"나이 –" }} · {{ latest_gender|default:"성별 –" }} ·
-      총 내원 {{ visit_count }}회
+
+{% block title %}환자 {{ patient.patient_nbr }} — 상세{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/patients.css' %}">
+<style>
+  .patient-page-header {
+    margin-bottom: 22px;
+  }
+
+  .patient-page-header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: #1E2530;
+    margin-bottom: 6px;
+  }
+
+  .patient-page-header .subtitle {
+    color: #64748B;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .page-body {
+    width: 100%;
+  }
+
+  .content-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+
+  .chart-card {
+    overflow: hidden;
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1E2530;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .risk-chart {
+    width: 100%;
+    min-height: 260px;
+  }
+
+  .grid-line {
+    stroke: #E2E8F0;
+    stroke-width: 1;
+  }
+
+  .axis-label {
+    fill: #94A3B8;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .risk-line {
+    fill: none;
+    stroke: #1B4F8A;
+    stroke-width: 3;
+  }
+
+  .risk-dot {
+    fill: #D9B84F;
+    stroke: #1E2530;
+    stroke-width: 2;
+  }
+
+  .chart-foot {
+    margin-top: 10px;
+  }
+
+  .visit-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .visit-card .card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid #E2E8F0;
+    margin-bottom: 0;
+  }
+
+  .visit-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .visit-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 28px;
+    border-radius: 999px;
+    background: #EEF2FF;
+    color: #4338CA;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .visit-date {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1E2530;
+  }
+
+  .tag {
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .tag-inpatient {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+
+  .risk-chip {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #FEE2E2;
+    color: #B91C1C;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px;
+  }
+
+  .info-group {
+    background: #F8FAFC;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .group-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #1E2530;
+    margin-bottom: 12px;
+  }
+
+  .info-group dl {
+    display: grid;
+    gap: 9px;
+  }
+
+  .info-group dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .info-group dt {
+    color: #64748B;
+    font-weight: 700;
+  }
+
+  .info-group dd {
+    color: #1E2530;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  .diag-list {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .diag-list li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .diag-code {
+    font-weight: 900;
+    color: #1B4F8A;
+  }
+
+  .diag-group {
+    color: #64748B;
+  }
+
+  .med-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .med-chip {
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #E0E7FF;
+    color: #3730A3;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .med-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    color: #64748B;
+    font-size: 12px;
+  }
+
+  .muted {
+    color: #94A3B8;
+    font-size: 13px;
+  }
+
+  .empty-state {
+    padding: 28px;
+    text-align: center;
+    color: #94A3B8;
+    font-weight: 700;
+  }
+
+  @media (max-width: 900px) {
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="patient-page-header">
+  <h1>환자 {{ patient.patient_name|default:'-' }} {{ patient.patient_nbr }}</h1>
+  <div class="subtitle">
+    {{ latest_age|default:"나이 –" }} · {{ latest_gender|default:"성별 –" }} ·
+    총 내원 {{ visit_count }}회
+  </div>
+</div>
+
+<main class="page-body">
+  <div class="content-card chart-card">
+    <div class="card-head">
+      <h2 class="card-title">내원별 30일 재입원 위험도 추이</h2>
     </div>
-  </header>
 
-  <main class="page-body">
-
-    <!-- 내원 추이 Line Chart -->
-    <div class="content-card chart-card">
-      <div class="card-head">
-        <h2 class="card-title">내원별 30일 재입원 위험도 추이</h2>
-      </div>
-
-      {% if chart %}
-      <svg class="risk-chart" viewBox="0 0 {{ chart.w }} {{ chart.h }}"
-           preserveAspectRatio="xMidYMid meet" role="img"
-           aria-label="내원별 데모 위험도 추이">
-        <!-- 가로 그리드 + Y축 라벨(%) -->
+    {% if chart %}
+      <svg
+        class="risk-chart"
+        viewBox="0 0 {{ chart.w }} {{ chart.h }}"
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="내원별 데모 위험도 추이"
+      >
         {% for g in chart.grid %}
-        <line x1="{{ chart.pad_l }}" y1="{{ g.y }}" x2="{{ chart.w }}" y2="{{ g.y }}"
-              class="grid-line"></line>
-        <text x="{{ chart.pad_l }}" y="{{ g.y }}" dx="-8" dy="4"
-              class="axis-label" text-anchor="end">{{ g.val }}%</text>
+          <line
+            x1="{{ chart.pad_l }}"
+            y1="{{ g.y }}"
+            x2="{{ chart.w }}"
+            y2="{{ g.y }}"
+            class="grid-line"
+          ></line>
+          <text
+            x="{{ chart.pad_l }}"
+            y="{{ g.y }}"
+            dx="-8"
+            dy="4"
+            class="axis-label"
+            text-anchor="end"
+          >{{ g.val }}%</text>
         {% endfor %}
-        <!-- 추이 선 -->
+
         <polyline points="{{ chart.polyline }}" class="risk-line"></polyline>
-        <!-- 내원 점 + 차수 라벨 -->
+
         {% for p in chart.points %}
-        <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4.5" class="risk-dot">
-          <title>{{ p.seq }}차 · {{ p.date|date:"Y-m-d" }} · {{ p.risk }}%</title>
-        </circle>
-        <text x="{{ p.x }}" y="{{ chart.axis_y }}" dy="18"
-              class="axis-label" text-anchor="middle">{{ p.seq }}차</text>
+          <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4.5" class="risk-dot">
+            <title>{{ p.seq }}차 · {{ p.date|date:"Y-m-d" }} · {{ p.risk }}%</title>
+          </circle>
+          <text
+            x="{{ p.x }}"
+            y="{{ chart.axis_y }}"
+            dy="18"
+            class="axis-label"
+            text-anchor="middle"
+          >{{ p.seq }}차</text>
         {% endfor %}
       </svg>
+
       <p class="chart-foot muted">
         ※ 예측 모델(LightGBM) 기반 30일 재입원 위험도입니다.
       </p>
-      {% elif single_visit %}
+    {% elif single_visit %}
       <div class="empty-state">
         내원 1회 — 추이 없음<br>
         <span class="muted">2회 이상 내원 시 위험도 추이가 표시됩니다.</span>
       </div>
-      {% else %}
+    {% else %}
       <div class="empty-state">내원 기록이 없습니다.</div>
-      {% endif %}
-    </div>
+    {% endif %}
+  </div>
 
-    <!-- 빠른 액션 -->
-    <div class="quick-actions">
-      <a class="btn btn-purple" href="{% url 'patients:patient_update' patient.pk %}">환자 수정</a>
-      <a class="btn btn-danger" href="{% url 'patients:patient_delete' patient.pk %}">환자 삭제</a>
-      <a class="btn btn-purple" href="{% url 'discharge:discharge_guide' patient_id=patient.pk %}">퇴원 준비도</a>
-      <a class="btn btn-purple" href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}">재방문 등록</a>
-    </div>
+  <div class="quick-actions">
+    <a class="btn btn-purple" href="{% url 'patients:patient_update' patient.pk %}">환자 수정</a>
+    <a class="btn btn-danger" href="{% url 'patients:patient_delete' patient.pk %}">환자 삭제</a>
+    <a class="btn btn-purple" href="{% url 'discharge:discharge_guide' patient_id=patient.pk %}">퇴원 준비도</a>
+    <a class="btn btn-purple" href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}">재방문 등록</a>
+  </div>
 
-    <!-- SHAP TOP 3 위험 요인 -->
-    {% if shap_top3 %}
+  {% if shap_top3 %}
     <div class="content-card">
       <div class="card-head">
         <h2 class="card-title">주요 위험 요인 (SHAP TOP 3)</h2>
       </div>
+
       <div class="shap-list" style="display:flex;flex-direction:column;gap:8px;padding:12px;">
         {% for s in shap_top3 %}
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="width:22px;height:22px;border-radius:50%;background:{% if forloop.counter == 1 %}#fef3c7{% elif forloop.counter == 2 %}#e0e7ff{% else %}#f3e8ff{% endif %};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{% if forloop.counter == 1 %}#92400e{% elif forloop.counter == 2 %}#3730a3{% else %}#6b21a8{% endif %};">{{ forloop.counter }}</span>
-          <span style="flex:1;font-size:14px;">{{ s.name }}</span>
-          <span style="font-size:13px;font-weight:700;color:#e8420a;">+{{ s.value }}</span>
-        </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:{% if forloop.counter == 1 %}#fef3c7{% elif forloop.counter == 2 %}#e0e7ff{% else %}#f3e8ff{% endif %};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{% if forloop.counter == 1 %}#92400e{% elif forloop.counter == 2 %}#3730a3{% else %}#6b21a8{% endif %};">
+              {{ forloop.counter }}
+            </span>
+            <span style="flex:1;font-size:14px;">{{ s.name }}</span>
+            <span style="font-size:13px;font-weight:700;color:#e8420a;">+{{ s.value }}</span>
+          </div>
         {% endfor %}
       </div>
     </div>
-    {% endif %}
+  {% endif %}
 
-    <!-- 내원 이력 카드 (시간순) -->
-    {% for r in rows %}
+  {% for r in rows %}
     <div class="content-card visit-card">
       <div class="card-head">
         <div class="visit-head-left">
           <span class="visit-badge">{{ r.seq }}차</span>
           <span class="visit-date">{{ r.e.visit_date|date:"Y-m-d" }}</span>
-          {% if r.e.is_inpatient %}<span class="tag tag-inpatient">입원</span>{% endif %}
+          {% if r.e.is_inpatient %}
+            <span class="tag tag-inpatient">입원</span>
+          {% endif %}
         </div>
+
         {% if r.risk is not None %}
-        <span class="risk-chip">위험도 {{ r.risk }}% {% if r.risk_level %}({{ r.risk_level }}){% endif %}</span>
+          <span class="risk-chip">위험도 {{ r.risk }}% {% if r.risk_level %}({{ r.risk_level }}){% endif %}</span>
         {% else %}
-        <span class="risk-chip" style="opacity:0.5;">미예측</span>
+          <span class="risk-chip" style="opacity:0.5;">미예측</span>
         {% endif %}
       </div>
 
       <div class="info-grid">
-        <!-- 기본 -->
         <section class="info-group">
           <h3 class="group-title">기본</h3>
           <dl>
@@ -121,7 +386,6 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
           </dl>
         </section>
 
-        <!-- 입원 -->
         <section class="info-group">
           <h3 class="group-title">입원</h3>
           <dl>
@@ -130,42 +394,45 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
             <div><dt>처치 수</dt><dd>{{ r.e.num_procedures|default:"–" }}</dd></div>
             <div><dt>약물 수</dt><dd>{{ r.e.num_medications|default:"–" }}</dd></div>
             <div><dt>진단 수</dt><dd>{{ r.e.number_diagnoses|default:"–" }}</dd></div>
-            <div><dt>외래/응급/입원</dt>
-              <dd>{{ r.e.number_outpatient|default:"0" }} /
-                  {{ r.e.number_emergency|default:"0" }} /
-                  {{ r.e.number_inpatient|default:"0" }}</dd></div>
+            <div>
+              <dt>외래/응급/입원</dt>
+              <dd>
+                {{ r.e.number_outpatient|default:"0" }} /
+                {{ r.e.number_emergency|default:"0" }} /
+                {{ r.e.number_inpatient|default:"0" }}
+              </dd>
+            </div>
           </dl>
         </section>
 
-        <!-- 진단 -->
         <section class="info-group">
           <h3 class="group-title">진단</h3>
           {% if r.diags %}
-          <ul class="diag-list">
-            {% for d in r.diags %}
-            <li>
-              <span class="diag-code">{{ d.code }}</span>
-              <span class="diag-group">{{ d.group }}</span>
-            </li>
-            {% endfor %}
-          </ul>
+            <ul class="diag-list">
+              {% for d in r.diags %}
+                <li>
+                  <span class="diag-code">{{ d.code }}</span>
+                  <span class="diag-group">{{ d.group }}</span>
+                </li>
+              {% endfor %}
+            </ul>
           {% else %}
-          <p class="muted">진단 코드 없음</p>
+            <p class="muted">진단 코드 없음</p>
           {% endif %}
         </section>
 
-        <!-- 약물 -->
         <section class="info-group">
           <h3 class="group-title">약물</h3>
           {% if r.meds %}
-          <div class="med-chips">
-            {% for m in r.meds %}
-            <span class="med-chip med-{{ m.status|lower }}">{{ m.name }} · {{ m.status }}</span>
-            {% endfor %}
-          </div>
+            <div class="med-chips">
+              {% for m in r.meds %}
+                <span class="med-chip med-{{ m.status|lower }}">{{ m.name }} · {{ m.status }}</span>
+              {% endfor %}
+            </div>
           {% else %}
-          <p class="muted">처방 변경 없음</p>
+            <p class="muted">처방 변경 없음</p>
           {% endif %}
+
           <div class="med-meta">
             <span>change: <strong>{{ r.e.change|default:"–" }}</strong></span>
             <span>diabetesMed: <strong>{{ r.e.diabetesMed|default:"–" }}</strong></span>
@@ -173,12 +440,10 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
         </section>
       </div>
     </div>
-    {% empty %}
+  {% empty %}
     <div class="content-card">
       <div class="empty-state">내원 기록이 없습니다.</div>
     </div>
-    {% endfor %}
-
-  </main>
-</body>
-</html>
+  {% endfor %}
+</main>
+{% endblock %}
