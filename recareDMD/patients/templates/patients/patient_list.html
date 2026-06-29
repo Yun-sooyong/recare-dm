@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}환자 관리{% endblock %}
-  <!-- 페이지 고유 -->
+  {% comment %} <!-- 페이지 고유 -->
   <main class="page-body">
     <div class="content-card">
       <div class="toolbar">
@@ -13,7 +13,7 @@
           {% if q %}<a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">초기화</a>{% endif %}
         </form>
         <a class="btn btn-purple" href="{% url 'prediction:prediction_page' %}">+ 환자 추가</a>
-      </div>
+      </div> {% endcomment %}
 
 {% block extra_style %}
 <link rel="stylesheet" href="{% static 'css/patients.css' %}">
@@ -111,7 +111,7 @@
   <div class="content-card">
     <div class="toolbar">
       <form class="search-bar" method="get" action="{% url 'patients:patient_list' %}">
-        <input class="form-input" type="text" name="q" value="{{ q }}" placeholder="환자코드로 검색">
+        <input class="form-input" type="text" name="q" value="{{ q }}" placeholder="환자코드, 이름으로 검색">
         <button class="btn btn-purple" type="submit">검색</button>
 
         {% if q %}

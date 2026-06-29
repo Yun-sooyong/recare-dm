@@ -51,7 +51,7 @@ body {
     ),
     var(--bg-main);
   color: var(--text-main);
-  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   line-height: 1.5;
 }
 
