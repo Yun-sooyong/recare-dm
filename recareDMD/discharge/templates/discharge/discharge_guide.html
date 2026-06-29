@@ -388,26 +388,26 @@ body.filter-recommended .cl-item[data-type="required"] { display: none; }
     <div>
       <div class="cl-group">
         <div class="cl-group-title">외래 연계</div>
-        <label class="cl-item" data-type="required" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">퇴원 후 7일 이내 외래 방문 예약 확인</span><span class="cl-tag required">필수</span>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">퇴원 후 7일 이내 외래 방문 예약 확인</span><span class="cl-tag required">필수</span>
         </label>
       </div>
       <div class="cl-group">
         <div class="cl-group-title">기본 안내</div>
-        <label class="cl-item" data-type="required" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">처방전 및 복용 약물 목록 수령 확인</span><span class="cl-tag required">필수</span>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">처방전 및 복용 약물 목록 수령 확인</span><span class="cl-tag required">필수</span>
         </label>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">식이요법 및 운동 지침 수령</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">식이요법 및 운동 지침 수령</span><span class="cl-tag recommended">권장</span>
         </label>
       </div>
       <div class="cl-group">
         <div class="cl-group-title">약물 관리</div>
-        <label class="cl-item" data-type="required" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">인슐린 시간 주사 방법 및 혈당 측정 교육</span><span class="cl-tag required">필수</span>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">인슐린 시간 주사 방법 및 혈당 측정 교육</span><span class="cl-tag required">필수</span>
         </label>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">인슐린 보관 방법 및 주사 부위 교육</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">인슐린 보관 방법 및 주사 부위 교육</span><span class="cl-tag recommended">권장</span>
         </label>
       </div>
     </div>
@@ -415,29 +415,29 @@ body.filter-recommended .cl-item[data-type="required"] { display: none; }
     <div>
       <div class="cl-group">
         <div class="cl-group-title">응급 대처</div>
-        <label class="cl-item" data-type="required" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">저혈당·고혈당 응급 증상 인지 및 대처 교육</span><span class="cl-tag required">필수</span>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">저혈당·고혈당 응급 증상 인지 및 대처 교육</span><span class="cl-tag required">필수</span>
         </label>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">응급 연락처 카드 제공</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">응급 연락처 카드 제공</span><span class="cl-tag recommended">권장</span>
         </label>
       </div>
       <div class="cl-group">
         <div class="cl-group-title">추적 관찰</div>
-        <label class="cl-item" data-type="required" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">이전 입원 원인 재발 예방 계획 안내</span><span class="cl-tag required">필수</span>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">이전 입원 원인 재발 예방 계획 안내</span><span class="cl-tag required">필수</span>
         </label>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">퇴원 후 1주일 이내 전화 상담 예약</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">퇴원 후 1주일 이내 전화 상담 예약</span><span class="cl-tag recommended">권장</span>
         </label>
       </div>
       <div class="cl-group">
         <div class="cl-group-title">지역 연계</div>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">지역사회 당뇨 관리 프로그램 안내</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">지역사회 당뇨 관리 프로그램 안내</span><span class="cl-tag recommended">권장</span>
         </label>
-        <label class="cl-item" data-type="recommended" onclick="this.classList.toggle('checked')">
-          <input type="checkbox"><span class="cl-item-text">가족 교육 자료 제공</span><span class="cl-tag recommended">권장</span>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">가족 교육 자료 제공</span><span class="cl-tag recommended">권장</span>
         </label>
       </div>
     </div>
