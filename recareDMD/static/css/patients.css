@@ -1,25 +1,25 @@
 :root {
-  --bg-main: #D8D1C4;
-  --bg-app: #F6F3EC;
-  --bg-card: #FFFDF8;
-  --bg-soft: #F2EEE6;
+  --bg-main: #d8d1c4;
+  --bg-app: #f6f3ec;
+  --bg-card: #fffdf8;
+  --bg-soft: #f2eee6;
 
-  --main-color: #1E2530;
+  --main-color: #1e2530;
   --main-color-2: #273241;
-  --point-color: #D9B84F;
+  --point-color: #d9b84f;
 
-  --safe-color: #8FA99B;
-  --warning-color: #D9B84F;
-  --danger-color: #D96B5F;
+  --safe-color: #8fa99b;
+  --warning-color: #d9b84f;
+  --danger-color: #d96b5f;
 
-  --text-main: #1F1F1F;
-  --text-sub: #6F6A61;
-  --text-muted: #8B857B;
+  --text-main: #1f1f1f;
+  --text-sub: #6f6a61;
+  --text-muted: #8b857b;
 
-  --border-color: #E4DED3;
-  --border-strong: #D6CCBF;
+  --border-color: #e4ded3;
+  --border-strong: #d6ccbf;
 
-  --white: #FFFFFF;
+  --white: #ffffff;
   --shadow-soft: 0 10px 30px rgba(30, 37, 48, 0.08);
   --shadow-card: 0 8px 22px rgba(30, 37, 48, 0.06);
 
@@ -28,21 +28,27 @@
   --radius-sm: 12px;
   --radius-pill: 999px;
 
-  --danger-bg: #FBE7E3;
-  --danger-text: #B64238;
-  --middle-bg: #F8EBC2;
-  --middle-text: #9A6E00;
-  --normal-bg: #E4ECE7;
-  --normal-text: #4F7766;
+  --danger-bg: #fbe7e3;
+  --danger-text: #b64238;
+  --middle-bg: #f8ebc2;
+  --middle-text: #9a6e00;
+  --normal-bg: #e4ece7;
+  --normal-text: #4f7766;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 34%),
+    radial-gradient(
+      circle at top left,
+      rgba(255, 255, 255, 0.38),
+      transparent 34%
+    ),
     var(--bg-main);
   color: var(--text-main);
   font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
@@ -77,7 +83,10 @@ body {
   font-size: 13px;
   margin-bottom: 10px;
 }
-.back-link:hover { opacity: 1; text-decoration: underline; }
+.back-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
 
 /* ---------- 본문 ---------- */
 .page-body {
@@ -96,7 +105,9 @@ body {
 }
 
 .content-card + .content-card,
-.quick-actions + .content-card { margin-top: 18px; }
+.quick-actions + .content-card {
+  margin-top: 18px;
+}
 
 .card-head {
   display: flex;
@@ -124,7 +135,10 @@ body {
   flex-wrap: wrap;
 }
 
-.search-bar { display: flex; gap: 8px; }
+.search-bar {
+  display: flex;
+  gap: 8px;
+}
 
 .form-input {
   border: 1px solid var(--border-color);
@@ -133,15 +147,18 @@ body {
   font-size: 14px;
   min-width: 220px;
   outline: none;
-  background: rgba(255,255,255,0.66);
+  background: rgba(255, 255, 255, 0.66);
   color: var(--text-main);
 }
 .form-input:focus {
   border-color: var(--point-color);
-  box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.20);
+  box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.2);
 }
 
-/* ---------- 버튼 ---------- */
+.form-input:focus {
+  border-color: var(--purple-500);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -158,24 +175,43 @@ body {
 }
 
 .btn-purple {
-  background: var(--main-color);
-  color: var(--white);
-  box-shadow: 0 8px 16px rgba(30, 37, 48, 0.16);
+  background: var(--purple-700);
+  color: #fff;
 }
-.btn-purple:hover { background: #141A22; transform: translateY(-1px); }
-
+.btn-purple:hover {
+  background: var(--purple-900);
+}
 .btn-ghost {
-  background: rgba(217, 184, 79, 0.18);
-  color: var(--main-color);
-  border-color: rgba(217, 184, 79, 0.28);
+  background: var(--purple-100);
+  color: var(--purple-700);
 }
-.btn-ghost:hover { background: rgba(217, 184, 79, 0.28); }
+.btn-ghost:hover {
+  background: #ddd6fe;
+}
+.btn-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.btn-danger:hover {
+  background: #fecaca;
+}
+.btn-sm {
+  padding: 6px 11px;
+  font-size: 13px;
+}
+
+.total-count {
+  color: var(--muted);
+  font-size: 13px;
+}
 
 .btn-danger {
   background: var(--danger-bg);
   color: var(--danger-text);
 }
-.btn-danger:hover { background: #f5cdc8; }
+.btn-danger:hover {
+  background: #f5cdc8;
+}
 
 .btn-disabled {
   background: var(--bg-soft);
@@ -183,9 +219,17 @@ body {
   cursor: not-allowed;
 }
 
-.btn-sm { min-height: 34px; padding: 0 13px; font-size: 13px; border-radius: 9px; }
+.btn-sm {
+  min-height: 34px;
+  padding: 0 13px;
+  font-size: 13px;
+  border-radius: 9px;
+}
 
-.total-count { color: var(--text-sub); font-size: 13px; }
+.total-count {
+  color: var(--text-sub);
+  font-size: 13px;
+}
 
 /* ---------- 테이블 ---------- */
 .patient-table {
@@ -211,14 +255,18 @@ body {
   border-bottom: 1px solid var(--border-color);
 }
 
-.patient-table tbody tr:hover { background: rgba(217, 184, 79, 0.06); }
+.patient-table tbody tr:hover {
+  background: #faf9ff;
+}
 
 .patient-code {
   font-weight: 700;
   color: var(--main-color);
   text-decoration: none;
 }
-.patient-code:hover { text-decoration: underline; color: var(--point-color); }
+.patient-code:hover {
+  text-decoration: underline;
+}
 
 /* ---------- 배지 ---------- */
 .visit-badge {
@@ -241,20 +289,45 @@ body {
   font-weight: 600;
 }
 
-.demo-tag {
+.risk-high {
   display: inline-block;
-  background: var(--bg-soft);
-  color: var(--text-muted);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 999px;
+  padding: 3px 11px;
   font-size: 12px;
   font-weight: 600;
 }
 
-/* ---------- 기타 ---------- */
-.row-actions { display: flex; gap: 6px; white-space: nowrap; }
-.muted { color: var(--text-sub); }
+.risk-medium {
+  display: inline-block;
+  background: #fef9c3;
+  color: #ca8a04;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.risk-low {
+  display: inline-block;
+  background: #dcfce7;
+  color: #16a34a;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--muted);
+}
 
 .empty-state {
   text-align: center;
@@ -282,17 +355,117 @@ body {
   color: var(--text-main);
 }
 
-.pagination-bar a:hover { background: rgba(217, 184, 79, 0.18); }
-.pagination-bar .current { background: var(--main-color); color: var(--white); font-weight: 700; }
-.pagination-bar .disabled { color: var(--text-muted); }
+.pagination-bar a:hover {
+  background: var(--purple-100);
+}
+.pagination-bar .current {
+  background: var(--purple-700);
+  color: #fff;
+  font-weight: 700;
+}
+.pagination-bar .disabled {
+  color: #c4c4c4;
+}
 
-/* ---------- 빠른 액션 ---------- */
-.quick-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+/* ── 환자 상세 ─────────────────────────────────────────── */
+.back-link {
+  display: inline-block;
+  color: #fff;
+  opacity: 0.85;
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.back-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
 
-/* ---------- 내원 카드 ---------- */
-.visit-head-left { display: flex; align-items: center; gap: 10px; }
-.visit-date { font-weight: 700; font-size: 15px; }
+.content-card + .content-card,
+.quick-actions + .content-card {
+  margin-top: 18px;
+}
 
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* 데모 라벨 — 회색 톤, 경고처럼 과하지 않게 */
+.demo-tag {
+  display: inline-block;
+  background: #f3f4f6;
+  color: var(--muted);
+  border: 1px dashed #d1d5db;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* SVG Line Chart */
+.risk-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.axis-label {
+  fill: var(--muted);
+  font-size: 11px;
+}
+.risk-line {
+  fill: none;
+  stroke: var(--purple-700);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.risk-dot {
+  fill: #fff;
+  stroke: var(--purple-700);
+  stroke-width: 2.5;
+}
+.chart-foot {
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+
+/* 빠른 액션 */
+.quick-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.btn-disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 내원 카드 */
+.visit-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.visit-date {
+  font-weight: 700;
+  font-size: 15px;
+}
 .tag {
   display: inline-block;
   border-radius: var(--radius-pill);
@@ -300,8 +473,10 @@ body {
   font-size: 11px;
   font-weight: 700;
 }
-.tag-inpatient { background: var(--middle-bg); color: var(--middle-text); }
-
+.tag-inpatient {
+  background: #fef3c7;
+  color: #92400e;
+}
 .risk-chip {
   display: inline-block;
   background: var(--bg-soft);
@@ -318,10 +493,16 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 18px 28px;
 }
-@media (max-width: 680px) { .info-grid { grid-template-columns: 1fr; } }
+@media (max-width: 680px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-.info-group { border-top: 1px solid var(--border-color); padding-top: 12px; }
-
+.info-group {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
 .group-title {
   margin: 0 0 10px;
   font-size: 12px;
@@ -330,8 +511,9 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
-.info-group dl { margin: 0; }
+.info-group dl {
+  margin: 0;
+}
 .info-group dl > div {
   display: flex;
   justify-content: space-between;
@@ -339,11 +521,21 @@ body {
   padding: 4px 0;
   font-size: 13px;
 }
-.info-group dt { color: var(--text-sub); margin: 0; }
-.info-group dd { margin: 0; font-weight: 600; text-align: right; }
+.info-group dt {
+  color: var(--muted);
+  margin: 0;
+}
+.info-group dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
 
-/* ---------- 진단 ---------- */
-.diag-list { list-style: none; margin: 0; padding: 0; }
+.diag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .diag-list li {
   display: flex;
   align-items: center;
@@ -351,7 +543,10 @@ body {
   padding: 4px 0;
   font-size: 13px;
 }
-.diag-code { font-weight: 700; font-family: ui-monospace, "Consolas", monospace; }
+.diag-code {
+  font-weight: 700;
+  font-family: ui-monospace, "Consolas", monospace;
+}
 .diag-group {
   background: rgba(217, 184, 79, 0.18);
   color: var(--main-color);
@@ -361,8 +556,11 @@ body {
   font-weight: 600;
 }
 
-/* ---------- 약물 ---------- */
-.med-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.med-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .med-chip {
   border-radius: 8px;
   padding: 3px 9px;
@@ -371,9 +569,18 @@ body {
   background: rgba(217, 184, 79, 0.18);
   color: var(--main-color);
 }
-.med-steady { background: rgba(217, 184, 79, 0.18); color: var(--main-color); }
-.med-up { background: var(--normal-bg); color: var(--normal-text); }
-.med-down { background: var(--danger-bg); color: var(--danger-text); }
+.med-steady {
+  background: var(--purple-100);
+  color: var(--purple-700);
+}
+.med-up {
+  background: #dcfce7;
+  color: #166534;
+}
+.med-down {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 .med-meta {
   display: flex;
   gap: 16px;
@@ -382,18 +589,31 @@ body {
   color: var(--text-muted);
 }
 
-/* ---------- SVG 차트 ---------- */
-.risk-chart { width: 100%; height: auto; display: block; }
-.grid-line { stroke: var(--border-color); stroke-width: 1; }
-.axis-label { fill: var(--text-sub); font-size: 11px; }
-.risk-line { fill: none; stroke: var(--point-color); stroke-width: 2.5; stroke-linejoin: round; }
-.risk-dot { fill: var(--white); stroke: var(--point-color); stroke-width: 2.5; }
-.chart-foot { font-size: 12px; margin: 10px 0 0; }
-
-/* ---------- 폼 ---------- */
-.form-card { max-width: 520px; }
-.form-row { margin-bottom: 18px; }
-.form-row label { display: block; font-weight: 700; margin-bottom: 7px; font-size: 14px; color: var(--main-color); }
-.form-error { color: var(--danger-text); font-size: 13px; margin-top: 6px; }
-.form-actions { display: flex; gap: 10px; margin-top: 8px; }
-.warn-text { color: var(--danger-text); font-size: 14px; line-height: 1.6; }
+/* form / delete pages */
+.form-card {
+  max-width: 520px;
+}
+.form-row {
+  margin-bottom: 18px;
+}
+.form-row label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 7px;
+  font-size: 14px;
+}
+.form-error {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.warn-text {
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1.6;
+}

@@ -29,7 +29,7 @@ TODO: base.html 완성 시 extends + block content 로 전환.
           <button class="btn btn-purple" type="submit">검색</button>
           {% if q %}<a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">초기화</a>{% endif %}
         </form>
-        <a class="btn btn-purple" href="{% url 'patients:patient_create' %}">+ 환자 추가</a>
+        <a class="btn btn-purple" href="{% url 'prediction:prediction_page' %}">+ 환자 추가</a>
       </div>
 
       <div class="total-count">전체 {{ total }}명{% if q %} · "{{ q }}" 검색 결과{% endif %}</div>
@@ -38,6 +38,7 @@ TODO: base.html 완성 시 extends + block content 로 전환.
         <thead>
           <tr>
             <th>환자코드</th>
+            <th>성명</th>
             <th>나이</th>
             <th>성별</th>
             <th>내원 횟수</th>
@@ -52,11 +53,12 @@ TODO: base.html 완성 시 extends + block content 로 전환.
             <td>
               <a class="patient-code" href="{% url 'patients:patient_detail' p.pk %}">{{ p.patient_nbr }}</a>
             </td>
+            <td>{{ p.patient_name|default:"-" }}</td>
             <td>{{ p.latest_age|default:"–" }}</td>
             <td>{{ p.latest_gender|default:"–" }}</td>
             <td><span class="visit-badge">{{ p.n_visits }}회</span></td>
             <td>{{ p.last_visit|date:"Y-m-d"|default:"–" }}</td>
-            <td><span class="risk-pending">– 예측 대기</span></td>
+            <td><span class="risk-{% if p.risk_level == '고위험' %}high{% elif p.risk_level == '중위험' %}medium{% else %}low{% endif %}">{{ p.risk_level }}</span></td>
             <td>
               <div class="row-actions">
                 <a class="btn btn-ghost btn-sm" href="{% url 'patients:patient_detail' p.pk %}">상세</a>
