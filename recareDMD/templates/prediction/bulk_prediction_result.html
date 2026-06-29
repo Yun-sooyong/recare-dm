@@ -73,6 +73,100 @@
             margin-bottom: 22px;
         }
 
+        .summary-card.total {
+            border-top: 6px solid var(--main-color);
+        }
+
+        .summary-card.high {
+            border-top: 6px solid #d94b4b;
+        }
+
+        .summary-card.middle {
+            border-top: 6px solid #d8b23f;
+        }
+
+        .summary-card.normal {
+            border-top: 6px solid #68a36f;
+        }
+
+        .summary-card.high strong {
+            color: #d94b4b;
+        }
+
+        .summary-card.middle strong {
+            color: #d8b23f;
+        }
+
+        .summary-card.normal strong {
+            color: #68a36f;
+        }
+
+        .result-table thead th {
+            color: #ffffff !important;
+            background: var(--main-color) !important;
+            font-weight: 900;
+        }
+
+        .result-table thead th:nth-last-child(1),
+        .result-table thead th:nth-last-child(2) {
+            color: #1f2937 !important;
+            background: var(--point-color) !important;
+        }
+
+        .column-menu {
+            width: 210px;
+            max-height: 260px;
+        }
+
+        .column-option {
+            font-size: 12px;
+            padding: 6px 5px;
+            gap: 6px;
+            line-height: 1.25;
+            word-break: keep-all;
+        }
+
+        .column-option input {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .button-row a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .home-link,
+        .back-link {
+            background: #1f2937;
+            color: #ffffff;
+        }
+
+        .patient-link {
+            background: #e8d9a8;
+            color: #1f2937;
+            border: 1px solid #d2bd72;
+        }
+
+        .shap-link {
+            background: #9aa3d9;
+            color: #ffffff;
+        }
+
         .summary-card {
             background: white;
             border-radius: 16px;
@@ -543,9 +637,17 @@
     </div>
 
     <div class="button-row">
+        <a href="/" class="home-link">메인으로 가기</a>
         <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+<<<<<<< Updated upstream
         <a href="{% url 'analysis:shap_page' %}" class="shap-link">SHAP 분석 보기</a>
+=======
+
+        {% if first_prediction_id %}
+            <a href="{% url 'analysis:shap_result' first_prediction_id %}" class="shap-link">SHAP 분석 보기</a>
+        {% endif %}
+>>>>>>> Stashed changes
     </div>
 
 </div>

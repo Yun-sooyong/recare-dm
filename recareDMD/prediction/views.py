@@ -276,6 +276,12 @@ def single_predict(request):
             probability_percent = round(probability * 100, 2)
             risk_label = get_risk_label(probability)
             risk_message = get_risk_message(risk_label)
+            
+            patient_prediction_data = save_prediction_result_to_db(
+                patient_data=data,
+                probability_percent=probability_percent,
+                risk_label=risk_label,
+            )
 
             prediction_data = save_prediction_result_to_db(
                 patient_data=data,
@@ -378,12 +384,30 @@ def bulk_predict(request):
             display_df['위험등급'] = display_df['재입원_확률'].apply(
                 lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
             )
+<<<<<<< Updated upstream
             for index, row in display_df.iterrows():
                 save_prediction_result_to_db(
                     patient_data=df.iloc[index].to_dict(),
                     probability_percent=row['재입원_확률'],
                     risk_label=row['위험등급'],
                 )
+=======
+            
+            for index, row in display_df.iterrows():
+                row_data = row.to_dict()
+
+                save_prediction_result_to_db(
+                    patient_data=row_data,
+                    probability_percent=row_data.get('재입원_확률', 0),
+                    risk_label=row_data.get('위험등급', '저위험'),
+                )
+            dataset = df.to_dict(orient='records')
+
+            save_bulk_prediction_with_shap(
+                dataset=dataset,
+                model=model,
+            )
+>>>>>>> Stashed changes
 
             important_columns = [
                 'name',
@@ -562,16 +586,76 @@ def download_sample_pdf(request):
 def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
     clean_features = clean_json_data(patient_data)
 
+<<<<<<< Updated upstream
     prediction_data = PredictionData.objects.create(
         patient_name=clean_features.get('name') or clean_features.get('patient_name') or '이름 없음',
         gender=clean_features.get('gender'),
         age=clean_features.get('age') or clean_features.get('raw_age'),
         features=clean_features,
         prediction_result=float(probability_percent),
+=======
+    def safe_value(key, default=''):
+        value = clean.get(key)
+
+        if value is None:
+            return default
+
+        if value == '':
+            return default
+
+        return value
+
+    # 환자 찾기/생성 (patient_nbr 기반, 없으면 자동 생성)
+    nbr = clean.get('patient_nbr')
+    if nbr:
+        patient, _ = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
+    else:
+        max_nbr = PersonalInfo.objects.order_by('-patient_nbr').values_list('patient_nbr', flat=True).first() or 10000
+        patient = PersonalInfo.objects.create(patient_nbr=max_nbr + 1)
+
+    # encounter_id 자동 생성
+    max_eid = PatientPrediction.objects.order_by('-encounter_id').values_list('encounter_id', flat=True).first() or 0
+
+    prediction_data = PatientPrediction.objects.create(
+        patient=patient,
+        encounter_id=max_eid + 1,
+        visit_date=timezone.now().date(),
+        is_inpatient=True,
+        race=clean.get('race', ''),
+        gender=clean.get('gender', ''),
+        age=clean.get('age') or clean.get('raw_age', ''),
+        time_in_hospital=int(clean.get('time_in_hospital') or 0),
+        num_lab_procedures=int(clean.get('num_lab_procedures') or 0),
+        num_procedures=int(clean.get('num_procedures') or 0),
+        num_medications=int(clean.get('num_medications') or 0),
+        number_outpatient=int(clean.get('number_outpatient') or 0),
+        number_emergency=int(clean.get('number_emergency') or 0),
+        number_inpatient=int(clean.get('number_inpatient') or 0),
+        number_diagnoses=int(clean.get('number_diagnoses') or 0),
+        diag_1=clean.get('diag_1', ''),
+        diag_2=clean.get('diag_2', ''),
+        diag_3=clean.get('diag_3', ''),
+        max_glu_serum=safe_value('max_glu_serum', 'None'),
+        A1Cresult=safe_value('A1Cresult', 'None'),
+        discharge_disposition_id=int(clean.get('discharge_disposition_id') or 1),
+        metformin=clean.get('metformin', 'No'),
+        insulin=clean.get('insulin', 'No'),
+        change=clean.get('change', ''),
+        diabetesMed=clean.get('diabetesMed', ''),
+        readmit_proba=float(probability_percent),
+>>>>>>> Stashed changes
         risk_level=risk_label,
     )
+    
+    patient.risk_level = risk_label
+    patient.readmit_proba = float(probability_percent)
+    patient.predicted_at = timezone.now()
+    patient.save()
 
     return prediction_data
+
+
+
 #=========================
 # 환자 장바구니 기능
 #=========================
@@ -627,6 +711,14 @@ def predict_patient_cart(request):
         display_df['위험등급'] = display_df['재입원_확률'].apply(
             lambda x: '고위험' if x >= 70 else '중위험' if x >= 40 else '저위험'
         )
+        for index, row in display_df.iterrows():
+            row_data = row.to_dict()
+
+            save_prediction_result_to_db(
+                patient_data=row_data,
+                probability_percent=row_data.get('재입원_확률', 0),
+                risk_label=row_data.get('위험등급', '저위험'),
+            )
 
         for index, row in display_df.iterrows():
             save_prediction_result_to_db(
