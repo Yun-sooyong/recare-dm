@@ -64,10 +64,11 @@ def patient_update(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         return redirect("patients:patient_list")
+    encounters = patient.predictions.order_by("visit_date", "encounter_id")
     return render(
         request,
         "patients/patient_form.html",
-        {"form": form, "mode": "update", "patient": patient},
+        {"form": form, "mode": "update", "patient": patient, "encounters": encounters},
     )
 
 

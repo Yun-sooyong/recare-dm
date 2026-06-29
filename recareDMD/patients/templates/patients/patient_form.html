@@ -91,6 +91,38 @@
     margin-top: 24px;
     flex-wrap: wrap;
   }
+
+  .enc-card {
+    max-width: 680px;
+    margin-top: 18px;
+  }
+
+  .enc-card h2 {
+    font-size: 18px;
+    font-weight: 900;
+    color: #1E2530;
+    margin-bottom: 14px;
+  }
+
+  .enc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid #E2E8F0;
+    font-size: 13px;
+  }
+
+  .enc-row .enc-meta {
+    color: #1E2530;
+    font-weight: 700;
+  }
+
+  .enc-row .muted {
+    color: #94A3B8;
+    font-weight: 600;
+  }
 </style>
 {% endblock %}
 
@@ -122,5 +154,22 @@
       </div>
     </form>
   </div>
+
+  {% if mode == "update" %}
+  <div class="content-card enc-card">
+    <h2>내원별 임상변수 수정</h2>
+    {% for e in encounters %}
+      <div class="enc-row">
+        <span class="enc-meta">
+          {{ e.visit_date|date:"Y-m-d" }} · {{ e.age|default:"나이 –" }} · {{ e.gender|default:"–" }}
+          {% if e.readmit_proba is not None %}· 위험도 {{ e.readmit_proba }}%{% if e.risk_level %} ({{ e.risk_level }}){% endif %}{% endif %}
+        </span>
+        <a class="btn btn-purple" href="{% url 'patients:encounter_update' e.visit_id %}">임상변수 수정</a>
+      </div>
+    {% empty %}
+      <p class="muted">내원 기록이 없습니다.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
 </main>
 {% endblock %}

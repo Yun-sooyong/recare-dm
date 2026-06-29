@@ -1,5 +1,4 @@
 {% load static %}
-{# TODO: base.html 완성 시 extends 로 전환. 현재 자립형. #}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -7,42 +6,191 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>내원 수정 — 환자 {{ patient.patient_nbr }}</title>
   <link rel="stylesheet" href="{% static 'css/patients.css' %}">
+  <style>
+    .enc-wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
+
+    .enc-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .enc-card {
+      background: #FFFDF8;
+      border: 1px solid #ECE6D6;
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+
+    .enc-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
+
+    .enc-form-grid .form-row {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .enc-form-grid .form-row label {
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      color: #1E2530;
+    }
+
+    .enc-form-grid .form-row input,
+    .enc-form-grid .form-row select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid #D8DEE8;
+      border-radius: 9px;
+      padding: 0 11px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .enc-form-grid .form-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    }
+
+    .enc-form-grid .form-row input:focus,
+    .enc-form-grid .form-row select:focus {
+      outline: none;
+      border-color: #7C5CFC;
+      box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
+    }
+
+    .form-error {
+      margin-top: 5px;
+      color: #DC2626;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    /* 스크롤 따라오는 환자 정보 패널 */
+    .patient-aside {
+      position: sticky;
+      top: 20px;
+      background: #F3EFFF;
+      border: 1px solid #DcceFF;
+      border-radius: 14px;
+      padding: 18px 18px 20px;
+    }
+
+    .patient-aside .aside-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #6D4FE0;
+      margin-bottom: 8px;
+    }
+
+    .patient-aside .aside-name {
+      font-size: 20px;
+      font-weight: 900;
+      color: #1E2530;
+      line-height: 1.3;
+    }
+
+    .patient-aside .aside-code {
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748B;
+      margin-top: 2px;
+    }
+
+    .patient-aside .aside-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #DcceFF;
+      font-size: 13px;
+    }
+
+    .patient-aside .aside-row dt { color: #64748B; font-weight: 700; }
+    .patient-aside .aside-row dd { color: #1E2530; font-weight: 800; }
+
+    .patient-aside .aside-note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #6D4FE0;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .enc-layout { grid-template-columns: 1fr; }
+      .enc-form-grid { grid-template-columns: 1fr; }
+      .patient-aside { position: static; }
+    }
+  </style>
 </head>
 <body>
   <header class="page-header">
     <a class="back-link" href="{% url 'patients:patient_detail' patient.pk %}">← 환자 상세</a>
     <h1>내원 수정 · {{ encounter.visit_date|date:"Y-m-d" }}</h1>
-    <div class="subtitle">
-      환자 {{ patient.patient_name|default:'-' }} {{ patient.patient_nbr }} ·
-      임상변수를 수정하면 저장 시 위험도가 재예측됩니다.
-    </div>
+    <div class="subtitle">임상변수를 수정하면 저장 시 위험도가 재예측됩니다.</div>
   </header>
 
-  <main class="page-body">
-    <div class="content-card form-card">
-      <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-          <div class="form-error">{{ form.non_field_errors }}</div>
-        {% endif %}
-        {% for field in form %}
-        <div class="form-row">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% for error in field.errors %}
-            <div class="form-error">{{ error }}</div>
-          {% endfor %}
+  <main class="enc-wrap">
+    <div class="enc-layout">
+      <div class="enc-card">
+        <form method="post">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="form-error">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div class="enc-form-grid">
+            {% for field in form %}
+            <div class="form-row">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% for error in field.errors %}
+                <div class="form-error">{{ error }}</div>
+              {% endfor %}
+            </div>
+            {% endfor %}
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-purple" type="submit">저장 후 재예측</button>
+            <a class="btn btn-ghost" href="{% url 'patients:patient_detail' patient.pk %}">취소</a>
+          </div>
+        </form>
+      </div>
+
+      <aside class="patient-aside">
+        <div class="aside-label">수정 중인 환자</div>
+        <div class="aside-name">{{ patient.patient_name|default:'이름 없음' }}</div>
+        <div class="aside-code">환자코드 {{ patient.patient_nbr }}</div>
+
+        <div class="aside-row">
+          <dt>내원일</dt><dd>{{ encounter.visit_date|date:"Y-m-d" }}</dd>
         </div>
-        {% endfor %}
-        <div class="form-actions">
-          <button class="btn btn-purple" type="submit">저장 후 재예측</button>
-          <a class="btn btn-ghost" href="{% url 'patients:patient_detail' patient.pk %}">취소</a>
+        <div class="aside-row">
+          <dt>현재 위험도</dt>
+          <dd>{% if encounter.readmit_proba is not None %}{{ encounter.readmit_proba }}%{% if encounter.risk_level %} ({{ encounter.risk_level }}){% endif %}{% else %}미예측{% endif %}</dd>
         </div>
-      </form>
+
+        <p class="aside-note">※ 인슐린·메트포르민만 화면에서 수정하며, 나머지 약물은 기존 처방값이 유지됩니다.</p>
+      </aside>
     </div>
-    <p class="muted" style="margin-top:12px;">
-      txt 들어갈 곳
-    </p>
   </main>
 </body>
 </html>
