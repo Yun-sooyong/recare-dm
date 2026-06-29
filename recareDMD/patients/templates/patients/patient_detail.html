@@ -15,7 +15,7 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
   <!-- 환자 헤더 -->
   <header class="page-header">
     <a class="back-link" href="{% url 'patients:patient_list' %}">← 환자 목록</a>
-    <h1>환자 {{ patient.patient_nbr }}</h1>
+    <h1>환자 {{ patient.patient_name|default:'-' }} {{ patient.patient_nbr }}</h1>
     <div class="subtitle">
       {{ latest_age|default:"나이 –" }} · {{ latest_gender|default:"성별 –" }} ·
       총 내원 {{ visit_count }}회
@@ -113,6 +113,7 @@ TODO: base.html 완성 시 extends + block content 로 전환 (목록/폼과 동
           <h3 class="group-title">기본</h3>
           <dl>
             <div><dt>내원일</dt><dd>{{ r.e.visit_date|date:"Y-m-d" }}</dd></div>
+            <div><dt>성명</dt><dd>{{ patient.patient_name|default:'-' }}</dd></div>
             <div><dt>나이</dt><dd>{{ r.e.age|default:"–" }}</dd></div>
             <div><dt>성별</dt><dd>{{ r.e.gender|default:"–" }}</dd></div>
             <div><dt>인종</dt><dd>{{ r.e.race|default:"–" }}</dd></div>
