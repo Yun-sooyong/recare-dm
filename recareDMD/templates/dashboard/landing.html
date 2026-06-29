@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReCare DM Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #FDFBF7;
+      color: #1E2530;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 60px;
+      z-index: 100;
+      background: rgba(253,251,247,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s;
+    }
+
+    nav.scrolled { border-bottom-color: #E8E2D8; }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      color: #1E2530;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 30px; height: 30px;
+      border: 2px solid #D9B84F;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-dot { width: 8px; height: 8px; background: #D9B84F; border-radius: 50%; }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #5a5245;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: #1E2530; }
+
+    .btn-nav {
+      background: #1E2530 !important;
+      color: #fff !important;
+      padding: 10px 22px;
+      border-radius: 100px;
+      transition: background 0.2s !important;
+    }
+
+    .btn-nav:hover { background: #D9B84F !important; color: #1E2530 !important; }
+
+    /* ── HERO ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      height: 100vh;
+      padding: 0 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-text { flex: 0 0 500px; z-index: 10; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #F2EEE6;
+      border: 1px solid #C8C0B0;
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 12px;
+      color: #6b6457;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot { width: 6px; height: 6px; background: #D9B84F; border-radius: 50%; }
+
+    h1 {
+      font-size: 54px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      letter-spacing: -1.5px;
+    }
+
+    h1 .accent { color: #D9B84F; }
+
+    .desc {
+      font-size: 16px;
+      color: #6b6457;
+      line-height: 1.75;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .desc strong { color: #1E2530; font-weight: 600; }
+
+    .cta-row { display: flex; gap: 16px; align-items: center; }
+
+    .btn-primary {
+      background: #1E2530;
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background: #D9B84F;
+      color: #1E2530;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(217,184,79,0.35);
+    }
+
+    .btn-outline {
+      color: #5a5245;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .btn-outline:hover { color: #1E2530; }
+    .btn-outline::after { content: '→'; transition: transform 0.2s; }
+    .btn-outline:hover::after { transform: translateX(4px); }
+
+    .stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 52px;
+      padding-top: 28px;
+      border-top: 1px solid #E8E2D8;
+    }
+
+    .stat-num { font-size: 20px; font-weight: 700; }
+    .stat-label { font-size: 11px; color: #8a8070; margin-top: 3px; }
+
+    canvas {
+      position: absolute;
+      right: 0; top: 0;
+      height: 100vh;
+      width: 60%;
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      padding: 120px 60px;
+      background: #F2EEE6;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #D9B84F;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .section-desc {
+      font-size: 15px;
+      color: #6b6457;
+      line-height: 1.8;
+      max-width: 560px;
+      font-weight: 300;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .about-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .about-card {
+      background: #FFFDF8;
+      border: 1px solid #C8C0B0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .about-icon {
+      width: 40px; height: 40px;
+      background: #F2EEE6;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .about-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .about-card p { font-size: 13px; color: #6b6457; line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    #features {
+      padding: 120px 60px;
+      background: #FDFBF7;
+    }
+
+    .features-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 64px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #FFFDF8;
+      border: 1px solid #E8E2D8;
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s;
+      display: block;
+    }
+
+    .feature-card:hover {
+      border-color: #D9B84F;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: #F2EEE6;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: #6b6457; line-height: 1.6; }
+
+    .feature-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #D9B84F;
+      margin-top: 16px;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      padding: 100px 60px;
+      background: #1E2530;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 15px;
+      color: #8a9ab0;
+      margin-bottom: 36px;
+    }
+
+    .btn-gold {
+      background: #D9B84F;
+      color: #1E2530;
+      padding: 16px 40px;
+      border-radius: 100px;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.25s;
+    }
+
+    .btn-gold:hover {
+      background: #f0cc6a;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(217,184,79,0.4);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 28px 60px;
+      background: #1E2530;
+      border-top: 1px solid #2e3a4a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer span { font-size: 13px; color: #4a5a6a; }
+
+    /* ── ANIMATIONS ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.25s; }
+    .fade-in:nth-child(3) { animation-delay: 0.4s; }
+    .fade-in:nth-child(4) { animation-delay: 0.55s; }
+    .fade-in:nth-child(5) { animation-delay: 0.7s; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="logo">
+    <div class="logo-icon"><div class="logo-dot"></div></div>
+    ReCare DM
+  </a>
+  <div class="nav-links">
+    <a href="#about">소개</a>
+    <a href="#features">기능</a>
+    <a href="/patients/">환자 목록</a>
+    <a href="/dashboard/" class="btn-nav">대시보드 입장</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="badge fade-in">
+      <span class="badge-dot"></span>
+      당뇨 환자 재입원 예측 시스템
+    </div>
+    <h1 class="fade-in">
+      데이터 기반<br>
+      <span class="accent">당뇨 관리</span><br>
+      대시보드
+    </h1>
+    <p class="desc fade-in">
+      환자의 임상 데이터를 분석해 <strong>재입원 위험도를 실시간 예측</strong>하고,<br>
+      맞춤형 퇴원 계획과 재방문 관리를 지원합니다.
+    </p>
+    <div class="cta-row fade-in">
+      <a href="/dashboard/" class="btn-primary">대시보드 시작하기</a>
+      <a href="#about" class="btn-outline">더 알아보기</a>
+    </div>
+    <div class="stats fade-in">
+      <div class="stat-item">
+        <div class="stat-num">3단계</div>
+        <div class="stat-label">위험도 분류</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">AI 예측</div>
+        <div class="stat-label">머신러닝 모델</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">실시간</div>
+        <div class="stat-label">데이터 연동</div>
+      </div>
+    </div>
+  </div>
+  <canvas id="wave"></canvas>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="reveal">
+      <div class="section-label">About</div>
+      <h2 class="section-title">왜 ReCare DM<br>인가요?</h2>
+      <p class="section-desc">
+        당뇨 환자의 재입원은 환자 건강과 의료 비용 모두에 큰 부담입니다.
+        ReCare DM은 머신러닝 기반 예측 모델로 <strong>재입원 위험을 사전에 파악</strong>하고,
+        의료진이 선제적으로 개입할 수 있도록 돕습니다.
+      </p>
+    </div>
+    <div class="about-cards reveal">
+      <div class="about-card">
+        <div class="about-icon">🎯</div>
+        <div>
+          <h4>정확한 위험도 예측</h4>
+          <p>고위험 · 중위험 · 저위험 3단계로 분류해 우선순위 관리</p>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">📋</div>
+        <div>
+          <h4>맞춤형 퇴원 계획</h4>
+          <p>위험도에 따른 개인별 퇴원 준비도 가이드 자동 생성</p>
+        </div>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🔄</div>
+        <div>
+          <h4>재방문 데이터 재예측</h4>
+          <p>재방문 시 새로운 데이터로 위험도를 즉시 재계산</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="features-header reveal">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">주요 기능</h2>
+    <p class="section-desc" style="margin: 0 auto; text-align:center;">
+      대시보드부터 퇴원 관리까지, 당뇨 환자 케어의 전 과정을 지원합니다.
+    </p>
+  </div>
+  <div class="features-grid">
+    <a href="/dashboard/" class="feature-card reveal">
+      <div class="feature-icon">📊</div>
+      <h3>대시보드</h3>
+      <p>전체 환자 현황과 위험도 분포를 한눈에 확인합니다.</p>
+      <span class="feature-link">바로가기 →</span>
+    </a>
+    <a href="/patients/" class="feature-card reveal">
+      <div class="feature-icon">👥</div>
+      <h3>환자 관리</h3>
+      <p>환자 목록 조회, 상세 정보 및 예측 이력을 관리합니다.</p>
+      <span class="feature-link">바로가기 →</span>
+    </a>
+    <a href="/prediction/" class="feature-card reveal">
+      <div class="feature-icon">🤖</div>
+      <h3>재입원 예측</h3>
+      <p>AI 모델로 재입원 확률을 계산하고 위험군을 분류합니다.</p>
+      <span class="feature-link">바로가기 →</span>
+    </a>
+    <a href="/patients/" class="feature-card reveal">
+      <div class="feature-icon">📈</div>
+      <h3>데이터 분석</h3>
+      <p>위험 요인과 통계를 시각화해 인사이트를 제공합니다.</p>
+      <span class="feature-link">바로가기 →</span>
+    </a>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="reveal">지금 바로 시작하세요</h2>
+  <p class="reveal">환자 데이터를 연동하고 위험도를 확인하세요.</p>
+  <a href="/dashboard/" class="btn-gold reveal">대시보드 입장하기</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2025 ReCare DM Dashboard</span>
+  <span>당뇨 환자 재입원 예측 시스템</span>
+</footer>
+
+<script>
+  /* 웨이브 캔버스 */
+  const canvas = document.getElementById('wave');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const lines = 60;
+    const colors = ['rgba(217,184,79,', 'rgba(30,37,48,', 'rgba(200,192,176,'];
+    for (let i = 0; i < lines; i++) {
+      const progress = i / lines;
+      const alpha = 0.06 + progress * 0.16;
+      ctx.strokeStyle = colors[i % colors.length] + alpha + ')';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let x = 0; x <= canvas.width; x += 4) {
+        const xr = x / canvas.width;
+        const y = canvas.height * 0.5
+          + Math.sin(xr * 3 + t + i * 0.15) * 80
+          + Math.sin(xr * 5 - t * 0.7 + i * 0.1) * 50
+          + Math.cos(xr * 2 + t * 0.5 + i * 0.08) * 60
+          + (progress - 0.5) * canvas.height * 0.55;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    t += 0.008;
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  /* 스크롤 시 nav 보더 */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  /* 스크롤 reveal 애니메이션 */
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 100);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
