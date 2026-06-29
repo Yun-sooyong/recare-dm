@@ -365,12 +365,15 @@
             <span class="tag tag-inpatient">입원</span>
           {% endif %}
         </div>
-
-        {% if r.risk is not None %}
+        <div style="display:flex;align-items:center;gap:8px;">
+          {% if r.risk is not None %}
           <span class="risk-chip">위험도 {{ r.risk }}% {% if r.risk_level %}({{ r.risk_level }}){% endif %}</span>
-        {% else %}
+          {% else %}
           <span class="risk-chip" style="opacity:0.5;">미예측</span>
-        {% endif %}
+          {% endif %}
+          <a class="btn btn-purple" href="{% url 'patients:encounter_update' r.e.visit_id %}"
+             style="padding:4px 12px;font-size:13px;">내원 수정</a>
+        </div>
       </div>
 
       <div class="info-grid">
