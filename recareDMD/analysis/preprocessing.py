@@ -783,8 +783,7 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
     patient_name = safe_value('name', '')
 
     if nbr:
-        nbr = str(nbr).strip().lstrip('\ufeff')
-        patient, created = PersonalInfo.objects.get_or_create(patient_nbr=int(nbr))
+        patient, created = PersonalInfo.objects.get_or_create(patient_nbr=int(float(nbr)))
         if patient_name and (created or not patient.patient_name):
             patient.patient_name = patient_name
             patient.save(update_fields=['patient_name'])
@@ -810,7 +809,6 @@ def save_prediction_result_to_db(patient_data, probability_percent, risk_label):
     with transaction.atomic():
         max_eid = (
             PatientPrediction.objects
-            .select_for_update()
             .order_by('-encounter_id')
             .values_list('encounter_id', flat=True)
             .first()
