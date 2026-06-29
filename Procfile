@@ -1,0 +1,1 @@
+web: cd recareDMD && python manage.py collectstatic --noinput && python manage.py migrate && gunicorn recareDMD.wsgi
