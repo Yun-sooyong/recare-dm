@@ -121,7 +121,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
-    BASE_DIR / 'images',
+    BASE_DIR / 'static',
 ]
 MODEL_PATH = BASE_DIR / 'lgbm_model.pkl'
 
