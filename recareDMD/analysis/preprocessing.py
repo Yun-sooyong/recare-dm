@@ -536,7 +536,7 @@ def bulk_predict(request):
                     'error': 'CSV 파일을 업로드해주세요.'
                 })
 
-            df = pd.read_csv(csv_file)
+            df = pd.read_csv(csv_file, encoding='utf-8-sig')
             display_df = df.copy()
 
             model = load_model()
