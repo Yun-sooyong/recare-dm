@@ -186,48 +186,84 @@
       border-top: 1px solid #E5DCCC;
     }
 
-    .todo-box,
-    .calendar-box {
+    .todo-box {
       padding: 14px 13px;
       border-radius: 14px;
       background: #F7F3EA;
       border: 1px solid #E2D8C8;
     }
 
-    .todo-title,
-    .calendar-title {
+    .todo-title {
       color: #1E2530;
       font-size: 13px;
       font-weight: 900;
-      margin-bottom: 11px;
+      margin-bottom: 12px;
     }
 
     .todo-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
     }
 
     .todo-list li {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 8px;
-      color: #4B5563;
+      color: #374151;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.35;
+      min-height: 18px;
     }
 
+    .todo-list li span:last-child {
+      display: block;
+      flex: 1;
+      word-break: keep-all;
+    }
+
+    /* 핵심: button 기본 스타일 완전 제거 */
     .todo-check {
-      width: 15px;
-      height: 15px;
-      margin-top: 1px;
+      appearance: none;
+      -webkit-appearance: none;
+
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      max-width: 14px;
+      min-height: 14px;
+      max-height: 14px;
+
+      margin: 0;
+      padding: 0;
       border-radius: 4px;
-      border: 1.5px solid #A8A196;
-      flex-shrink: 0;
-      position: relative;
+      border: 1.5px solid #B8AFA0;
       background: #FFFDF8;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      cursor: pointer;
+      position: relative;
+      line-height: 1;
+      font-size: 0;
+      box-shadow: none;
+    }
+
+    .todo-check:hover {
+      border-color: #1E2530;
+      background: #F2EEE6;
+    }
+
+    .todo-check:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.25);
     }
 
     .todo-list li.done .todo-check {
@@ -247,18 +283,24 @@
       transform: rotate(45deg);
     }
 
-    .todo-list li.priority .todo-check {
+    .todo-list li.done span:last-child {
+      color: #8A8070;
+      text-decoration: line-through;
+      opacity: 0.72;
+    }
+
+    .todo-list li.priority:not(.done) .todo-check {
       border-color: #DC2626;
     }
 
     .todo-meta {
-      margin-top: 11px;
+      margin-top: 12px;
       padding-top: 10px;
       border-top: 1px solid #E2D8C8;
-      color: #7A6F60;
+      color: #6B6256;
       font-size: 11px;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .calendar-head {
@@ -374,7 +416,7 @@
     <nav class="sidebar">
       <a href="/" class="sidebar-logo">
         <span class="logo-mark">
-          <img src="{% static 'images/diabetes-care-logo.png' %}" alt="ReCare DM 로고">
+          <img src="{% static 'images/diabetes-care-logo.PNG' %}" alt="ReCare DM 로고">
         </span>
         <span>
           <strong>ReCare DM</strong>
@@ -447,25 +489,29 @@
         <div class="todo-box">
           <div class="todo-title">To Do List</div>
 
-          <ul class="todo-list">
-            <li class="priority">
-              <span class="todo-check"></span>
+          <ul class="todo-list" id="todoList">
+            <li class="priority" data-todo-id="high-risk">
+              <button type="button" class="todo-check" aria-label="고위험 환자 우선 확인 체크"></button>
               <span>고위험 환자 우선 확인</span>
             </li>
-            <li>
-              <span class="todo-check"></span>
+
+            <li data-todo-id="recent-prediction">
+              <button type="button" class="todo-check" aria-label="최근 예측 결과 검토 체크"></button>
               <span>최근 예측 결과 검토</span>
             </li>
-            <li>
-              <span class="todo-check"></span>
+
+            <li data-todo-id="discharge-target">
+              <button type="button" class="todo-check" aria-label="퇴원 안내 대상 확인 체크"></button>
               <span>퇴원 안내 대상 확인</span>
             </li>
-            <li class="done">
-              <span class="todo-check"></span>
+
+            <li data-todo-id="csv-upload">
+              <button type="button" class="todo-check" aria-label="신규 CSV 업로드 확인 체크"></button>
               <span>신규 CSV 업로드 확인</span>
             </li>
-            <li>
-              <span class="todo-check"></span>
+
+            <li data-todo-id="risk-factor-note">
+              <button type="button" class="todo-check" aria-label="재입원 위험 요인 기록 체크"></button>
               <span>재입원 위험 요인 기록</span>
             </li>
           </ul>
@@ -553,6 +599,51 @@
       }
     })();
   </script>
+
+  <script>
+  (function () {
+    const todoList = document.getElementById("todoList");
+
+    if (!todoList) {
+      return;
+    }
+
+    const storageKey = "recare_dm_todo_state";
+
+    function loadTodoState() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveTodoState(state) {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    const todoState = loadTodoState();
+    const todoItems = todoList.querySelectorAll("li[data-todo-id]");
+
+    todoItems.forEach(function (item) {
+      const todoId = item.dataset.todoId;
+      const checkButton = item.querySelector(".todo-check");
+
+      if (todoState[todoId]) {
+        item.classList.add("done");
+      } else {
+        item.classList.remove("done");
+      }
+
+      checkButton.addEventListener("click", function () {
+        item.classList.toggle("done");
+
+        todoState[todoId] = item.classList.contains("done");
+        saveTodoState(todoState);
+      });
+    });
+  })();
+</script>
 
   {% block extra_script %}{% endblock %}
 </body>
