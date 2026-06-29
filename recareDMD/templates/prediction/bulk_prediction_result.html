@@ -256,6 +256,146 @@
                 min-width: 850px;
             }
         }
+
+        .risk-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .risk-summary-card {
+            background: #fffdf8;
+            border-radius: 8px;
+            padding: 18px 20px;
+            border-left: 4px solid #1f5fa8;
+            box-shadow: var(--shadow-card);
+        }
+
+        .risk-summary-card p {
+            margin: 0 0 12px;
+            font-size: 13px;
+            color: #5f6b7a;
+            font-weight: 700;
+        }
+
+        .risk-summary-card strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 30px;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .risk-summary-card span {
+            font-size: 12px;
+            color: #8a94a6;
+            font-weight: 700;
+        }
+
+        .risk-summary-card.total {
+            border-left-color: #1f5fa8;
+        }
+
+        .risk-summary-card.total strong {
+            color: #1f5fa8;
+        }
+
+        .risk-summary-card.high {
+            border-left-color: #e03131;
+        }
+
+        .risk-summary-card.high strong {
+            color: #e03131;
+        }
+
+        .risk-summary-card.caution {
+            border-left-color: #f08c00;
+        }
+
+        .risk-summary-card.caution strong {
+            color: #f08c00;
+        }
+
+        .risk-summary-card.normal {
+            border-left-color: #099268;
+        }
+
+        .risk-summary-card.normal strong {
+            color: #099268;
+        }
+
+        @media (max-width: 900px) {
+            .risk-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-table thead th {
+            color: #ffffff !important;
+            background: var(--main-color) !important;
+            font-weight: 900;
+        }
+
+        .result-table thead th:nth-last-child(1),
+        .result-table thead th:nth-last-child(2) {
+            color: #1f2937 !important;
+            background: var(--point-color) !important;
+        }
+
+        .column-menu {
+            width: 210px;
+            max-height: 260px;
+        }
+
+        .column-option {
+            font-size: 12px;
+            padding: 6px 5px;
+            gap: 6px;
+            line-height: 1.25;
+            word-break: keep-all;
+        }
+
+        .column-option input {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .button-row a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .home-link,
+        .back-link {
+            background: #1f2937;
+            color: #ffffff !important;
+        }
+
+        .patient-link {
+            background: #e8d9a8;
+            color: #1f2937 !important;
+            border: 1px solid #d2bd72;
+        }
+
+        .shap-link {
+            background: #9aa3d9;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 
@@ -267,25 +407,29 @@
         <p>업로드된 환자 정보를 기반으로 30일 이내 재입원 위험도를 예측했습니다.</p>
     </div>
 
-    <div class="grid-4" style="margin-bottom: 22px;">
-        <div class="summary-card">
-            <span>전체 환자 수</span>
+    <div class="risk-summary-grid">
+        <div class="risk-summary-card total">
+            <p>전체 예측 환자</p>
             <strong>{{ total_count }}</strong>
+            <span>등록 기준</span>
         </div>
 
-        <div class="summary-card">
-            <span>고위험 환자</span>
+        <div class="risk-summary-card high">
+            <p>고위험 환자</p>
             <strong>{{ high_count }}</strong>
+            <span>재입원 위험도 70% 이상</span>
         </div>
 
-        <div class="summary-card">
-            <span>중위험 환자</span>
+        <div class="risk-summary-card caution">
+            <p>주의 환자</p>
             <strong>{{ middle_count }}</strong>
+            <span>중간 위험 등급</span>
         </div>
 
-        <div class="summary-card">
-            <span>정상 환자</span>
+        <div class="risk-summary-card normal">
+            <p>정상 환자</p>
             <strong>{{ low_count }}</strong>
+            <span>저위험 등급</span>
         </div>
     </div>
 
@@ -355,8 +499,13 @@
     </div>
 
     <div class="button-row">
+        <a href="{% url 'dashboard:home' %}" class="home-link">메인으로 가기</a>
         <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
         <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+
+        {% if first_prediction_id %}
+        <a href="{% url 'analysis:shap_result' first_prediction_id %}" class="shap-link">SHAP 분석 보기</a>
+        {% endif %}
     </div>
 
 </div>
