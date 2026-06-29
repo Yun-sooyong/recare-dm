@@ -34,7 +34,7 @@ MEDICATION_CHOICES = [
 
 class PersonalInfo(models.Model):
     patient_nbr = models.BigIntegerField(unique=True)
-
+    patient_name = models.CharField(max_length=100, blank=True)  
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
