@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>내원 수정 — 환자 {{ patient.patient_nbr }}</title>
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
   <link rel="stylesheet" href="{% static 'css/patients.css' %}">
   <style>
     .enc-wrap {
@@ -66,8 +67,8 @@
     .enc-form-grid .form-row input:focus,
     .enc-form-grid .form-row select:focus {
       outline: none;
-      border-color: #7C5CFC;
-      box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
+      border-color: #D9B84F;
+      box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.20);
     }
 
     .form-error {
@@ -84,20 +85,21 @@
       flex-wrap: wrap;
     }
 
-    /* 스크롤 따라오는 환자 정보 패널 */
+    /* 스크롤 따라오는 환자 정보 패널 (하얀 카드) */
     .patient-aside {
       position: sticky;
       top: 20px;
-      background: #F3EFFF;
-      border: 1px solid #DcceFF;
+      background: #FFFDF8;
+      border: 1px solid #E4DED3;
       border-radius: 14px;
       padding: 18px 18px 20px;
+      box-shadow: 0 8px 22px rgba(30, 37, 48, 0.06);
     }
 
     .patient-aside .aside-label {
       font-size: 12px;
       font-weight: 800;
-      color: #6D4FE0;
+      color: #8B857B;
       margin-bottom: 8px;
     }
 
@@ -111,7 +113,7 @@
     .patient-aside .aside-code {
       font-size: 13px;
       font-weight: 700;
-      color: #64748B;
+      color: #6F6A61;
       margin-top: 2px;
     }
 
@@ -121,17 +123,17 @@
       gap: 10px;
       margin-top: 12px;
       padding-top: 12px;
-      border-top: 1px solid #DcceFF;
+      border-top: 1px solid #E4DED3;
       font-size: 13px;
     }
 
-    .patient-aside .aside-row dt { color: #64748B; font-weight: 700; }
+    .patient-aside .aside-row dt { color: #6F6A61; font-weight: 700; }
     .patient-aside .aside-row dd { color: #1E2530; font-weight: 800; }
 
     .patient-aside .aside-note {
       margin-top: 14px;
       font-size: 12px;
-      color: #6D4FE0;
+      color: #8B857B;
       line-height: 1.5;
     }
 

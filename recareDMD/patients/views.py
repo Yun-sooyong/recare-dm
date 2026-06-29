@@ -59,16 +59,13 @@ def patient_create(request):
 
 
 def patient_update(request, pk):
+    # 환자코드 수정 기능 제거 — 내원별 임상변수 수정 목록만 보여준다.
     patient = get_object_or_404(PersonalInfo, pk=pk)
-    form = PatientForm(request.POST or None, instance=patient)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect("patients:patient_list")
     encounters = patient.predictions.order_by("visit_date", "encounter_id")
     return render(
         request,
         "patients/patient_form.html",
-        {"form": form, "mode": "update", "patient": patient, "encounters": encounters},
+        {"mode": "update", "patient": patient, "encounters": encounters},
     )
 
 
