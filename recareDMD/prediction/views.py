@@ -19,6 +19,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+
 MODEL_PATH = os.path.join(settings.BASE_DIR, 'lgbm_model.pkl')
 
 
@@ -238,6 +239,8 @@ def bulk_predict(request):
                 })
 
             df = pd.read_csv(csv_file, encoding='utf-8-sig')
+            if 'patient_nbr' in df.columns:
+                df['patient_nbr'] = df['patient_nbr'].astype(str).str.lstrip('\ufeff')
             display_df = df.copy()
 
             model = load_model()
@@ -276,8 +279,9 @@ def bulk_predict(request):
 
 
 def download_sample_csv(request):
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="sample_prediction_input.csv"'
+    
 
     writer = csv.writer(response)
 
@@ -331,8 +335,8 @@ def download_sample_csv(request):
 
 def download_sample_pdf(request):
     try:
-        from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
     except ImportError:
         return HttpResponse('PDF 생성을 위해 reportlab 패키지를 설치해주세요: pip install reportlab')
 
