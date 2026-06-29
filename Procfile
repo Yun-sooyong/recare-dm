@@ -1,1 +1,1 @@
-web: cd recareDMD && python manage.py collectstatic --noinput && python manage.py migrate && gunicorn recareDMD.wsgi
+web: cd recareDMD && python manage.py collectstatic --noinput && python manage.py migrate && gunicorn recareDMD.wsgi --workers 1 --timeout 120
