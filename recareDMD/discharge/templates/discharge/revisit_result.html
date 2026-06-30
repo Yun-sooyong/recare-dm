@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>재방문 예측 결과 — {{ patient.patient_nbr }}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-main: #D8D1C4;
+  --bg-card: #FFFDF8;
+  --bg-soft: #F2EEE6;
+  --main-color: #1E2530;
+  --point-color: #D9B84F;
+  --text-main: #1F1F1F;
+  --text-sub: #6F6A61;
+  --text-muted: #8B857B;
+  --border-color: #E4DED3;
+  --shadow-card: 0 8px 22px rgba(30, 37, 48, 0.06);
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --danger-color: #D96B5F;
+  --danger-bg: #FBE7E3;
+  --danger-bd: rgba(217,107,95,0.28);
+  --danger-text: #B64238;
+  --middle-bg: #F8EBC2;
+  --middle-bd: rgba(217,184,79,0.28);
+  --middle-text: #9A6E00;
+  --normal-bg: #E4ECE7;
+  --normal-bd: rgba(79,119,102,0.28);
+  --normal-text: #4F7766;
+}
+
+body {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 34%), var(--bg-main);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.container { max-width: 640px; margin: 0 auto; }
+
+/* 브레드크럼 */
+.breadcrumb { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb a { color: var(--text-sub); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-main); }
+.breadcrumb .sep { color: var(--text-muted); }
+.breadcrumb .cur { color: var(--text-main); font-weight: 700; }
+
+/* 카드 */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+  margin-bottom: 16px;
+  border-left: 2px solid var(--point-color); padding-left: 8px;
+}
+
+/* 결과 박스 */
+.result-box {
+  text-align: center; padding: 28px; border-radius: var(--radius-sm); margin-bottom: 16px;
+}
+.result-box.high { background: var(--danger-bg); border: 2px solid var(--danger-bd); }
+.result-box.medium { background: var(--middle-bg); border: 2px solid var(--middle-bd); }
+.result-box.low { background: var(--normal-bg); border: 2px solid var(--normal-bd); }
+
+.result-box .prob { font-size: 42px; font-weight: 950; line-height: 1; letter-spacing: -1px; }
+.result-box.high .prob { color: var(--danger-color); }
+.result-box.medium .prob { color: var(--middle-text); }
+.result-box.low .prob { color: var(--normal-text); }
+
+.result-box .rlabel { font-size: 16px; font-weight: 800; margin-top: 6px; }
+.result-box.high .rlabel { color: var(--danger-text); }
+.result-box.medium .rlabel { color: var(--middle-text); }
+.result-box.low .rlabel { color: var(--normal-text); }
+
+.result-box .rmsg { font-size: 13px; color: var(--text-sub); margin-top: 8px; line-height: 1.6; }
+
+/* 정보 테이블 */
+.info-table { width: 100%; border-collapse: collapse; }
+.info-table th {
+  text-align: left; padding: 10px 12px;
+  background: var(--bg-soft); width: 35%;
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+}
+.info-table td { padding: 10px 12px; font-size: 13px; color: var(--text-main); }
+.info-table tr + tr th, .info-table tr + tr td { border-top: 1px solid var(--border-color); }
+
+/* 버튼 */
+.actions { display: flex; gap: 10px; }
+.btn {
+  flex: 1; padding: 12px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 800;
+  text-align: center; text-decoration: none; border: none; cursor: pointer;
+  transition: 0.18s ease;
+}
+.btn-primary {
+  background: var(--main-color); color: #fff;
+  box-shadow: 0 4px 12px rgba(30,37,48,0.16);
+}
+.btn-primary:hover { background: #141A22; transform: translateY(-1px); }
+.btn-outline {
+  background: rgba(217,184,79,0.12); color: var(--main-color);
+  border: 1.5px solid rgba(217,184,79,0.28);
+}
+.btn-outline:hover { background: rgba(217,184,79,0.22); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <nav class="breadcrumb">
+    <a href="#">환자 목록</a><span class="sep">›</span>
+    <a href="#">{{ patient.patient_nbr }}</a><span class="sep">›</span>
+    <span class="cur">재방문 예측 결과</span>
+  </nav>
+
+  <!-- 예측 결과 -->
+  <div class="card">
+    <div class="card-title">재입원 위험도</div>
+    <div class="result-box {% if risk_label == '고위험' %}high{% elif risk_label == '중위험' %}medium{% else %}low{% endif %}">
+      <div class="prob">{{ probability }}%</div>
+      <div class="rlabel">{{ risk_label }}</div>
+      <div class="rmsg">{{ risk_message }}</div>
+    </div>
+  </div>
+
+  <!-- 환자 정보 -->
+  <div class="card">
+    <div class="card-title">환자 정보</div>
+    <table class="info-table">
+      <tr><th>환자 번호</th><td>{{ patient.patient_nbr }}</td></tr>
+      <tr><th>내원일</th><td>{{ prediction.visit_date }}</td></tr>
+      <tr><th>총 내원 횟수</th><td>{{ patient.visit_count }}회</td></tr>
+    </table>
+  </div>
+
+  <div class="actions">
+    <a href="{% url 'discharge:discharge_guide' patient_id=patient.pk %}" class="btn btn-primary">퇴원 안내서로 이동</a>
+    <a href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">다시 입력</a>
+  </div>
+
+</div>
+</body>
+</html>

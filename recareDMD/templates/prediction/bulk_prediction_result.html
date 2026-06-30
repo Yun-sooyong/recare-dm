@@ -1,0 +1,842 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CSV 대량 예측 결과{% endblock %}
+
+{% block extra_style %}
+<style>
+        /* common.css에 없는, 이 페이지 전용 보조 스타일만 추가 */
+
+        .summary-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .summary-card strong {
+            font-size: 28px;
+            color: var(--main-color);
+        }
+
+        .table-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .table-card h2 {
+            margin: 0 0 8px;
+            color: var(--main-color);
+            font-size: 21px;
+            font-weight: 900;
+        }
+
+        .table-desc {
+            margin: 0 0 18px;
+            color: var(--text-sub);
+            font-size: 13px;
+        }
+
+        .filter-card {
+            background: var(--bg-soft);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin: 0 0 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            align-items: end;
+            position: relative;
+            z-index: 10;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--main-color);
+            margin-bottom: 8px;
+        }
+
+        .filter-group select,
+        .column-toggle-btn {
+            height: 43px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0 12px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .filter-group select:focus,
+        .column-toggle-btn:focus {
+            outline: none;
+            border-color: var(--point-color);
+            box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.18);
+        }
+
+        .column-toggle-btn {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+        }
+
+        .column-toggle-btn::after {
+            content: "▾";
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .column-menu {
+            display: none;
+            position: absolute;
+            top: 72px;
+            left: 0;
+            width: 260px;
+            max-height: 330px;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            box-shadow: var(--shadow-soft);
+            z-index: 100;
+        }
+
+        .column-menu.show {
+            display: block;
+        }
+
+        .column-menu-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--main-color);
+            margin-bottom: 10px;
+        }
+
+        .column-menu-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .small-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 7px 9px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            background: rgba(217, 184, 79, 0.18);
+            color: var(--main-color);
+        }
+
+        .small-btn:hover {
+            background: rgba(217, 184, 79, 0.30);
+        }
+
+        .column-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 6px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .column-option:hover {
+            background: var(--bg-soft);
+        }
+
+        .column-option input {
+            accent-color: var(--point-color);
+        }
+
+        .column-option.fixed {
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .column-option.fixed input {
+            cursor: not-allowed;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 950px;
+        }
+
+        .result-table thead {
+            background: var(--main-color);
+            color: var(--white);
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .result-table tbody tr {
+            transition: 0.15s ease;
+        }
+
+        .result-table th:nth-last-child(1),
+        .result-table th:nth-last-child(2) {
+            background: var(--point-color);
+        }
+
+        .result-table td:nth-last-child(1),
+        .result-table td:nth-last-child(2) {
+            font-weight: 900;
+            color: var(--main-color);
+            background: rgba(217, 184, 79, 0.12);
+        }
+
+        .probability-cell {
+            font-weight: 900;
+            color: var(--point-color) !important;
+        }
+
+        .empty-message {
+            display: none;
+            padding: 28px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+            .filter-card {
+                grid-template-columns: 1fr;
+            }
+
+            .column-menu {
+                position: static;
+                width: 100%;
+                margin-top: 8px;
+            }
+
+            .result-table {
+                min-width: 850px;
+            }
+        }
+
+        .risk-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .risk-summary-card {
+            background: #fffdf8;
+            border-radius: 8px;
+            padding: 18px 20px;
+            border-left: 4px solid #1f5fa8;
+            box-shadow: var(--shadow-card);
+        }
+
+        .risk-summary-card p {
+            margin: 0 0 12px;
+            font-size: 13px;
+            color: #5f6b7a;
+            font-weight: 700;
+        }
+
+        .risk-summary-card strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 30px;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        .risk-summary-card span {
+            font-size: 12px;
+            color: #8a94a6;
+            font-weight: 700;
+        }
+
+        .risk-summary-card.total {
+            border-left-color: #1f5fa8;
+        }
+
+        .risk-summary-card.total strong {
+            color: #1f5fa8;
+        }
+
+        .risk-summary-card.high {
+            border-left-color: #e03131;
+        }
+
+        .risk-summary-card.high strong {
+            color: #e03131;
+        }
+
+        .risk-summary-card.caution {
+            border-left-color: #f08c00;
+        }
+
+        .risk-summary-card.caution strong {
+            color: #f08c00;
+        }
+
+        .risk-summary-card.normal {
+            border-left-color: #099268;
+        }
+
+        .risk-summary-card.normal strong {
+            color: #099268;
+        }
+
+        @media (max-width: 900px) {
+            .risk-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-table thead th {
+            color: #ffffff !important;
+            background: var(--main-color) !important;
+            font-weight: 900;
+        }
+
+        .result-table thead th:nth-last-child(1),
+        .result-table thead th:nth-last-child(2) {
+            color: #1f2937 !important;
+            background: var(--point-color) !important;
+        }
+
+        .column-menu {
+            width: 210px;
+            max-height: 260px;
+        }
+
+        .column-option {
+            font-size: 12px;
+            padding: 6px 5px;
+            gap: 6px;
+            line-height: 1.25;
+            word-break: keep-all;
+        }
+
+        .column-option input {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .button-row a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .home-link,
+        .back-link {
+            background: #1f2937;
+            color: #ffffff !important;
+        }
+
+        .patient-link {
+            background: #e8d9a8;
+            color: #1f2937 !important;
+            border: 1px solid #d2bd72;
+        }
+
+        .shap-link {
+            background: #9aa3d9;
+            color: #ffffff !important;
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+    <div class="hero">
+        <h1>CSV 대량 예측 결과</h1>
+        <p>업로드된 환자 정보를 기반으로 30일 이내 재입원 위험도를 예측했습니다.</p>
+    </div>
+
+    <div class="risk-summary-grid">
+        <div class="risk-summary-card total">
+            <p>전체 예측 환자</p>
+            <strong>{{ total_count }}</strong>
+            <span>등록 기준</span>
+        </div>
+
+        <div class="risk-summary-card high">
+            <p>고위험 환자</p>
+            <strong>{{ high_count }}</strong>
+            <span>재입원 위험도 70% 이상</span>
+        </div>
+
+        <div class="risk-summary-card caution">
+            <p>주의 환자</p>
+            <strong>{{ middle_count }}</strong>
+            <span>중간 위험 등급</span>
+        </div>
+
+        <div class="risk-summary-card normal">
+            <p>정상 환자</p>
+            <strong>{{ low_count }}</strong>
+            <span>저위험 등급</span>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h2>환자별 예측 결과</h2>
+        <p class="table-desc">
+            주요 환자 정보만 선별하여 표시합니다. 원하는 컬럼만 선택하여 볼 수 있습니다.
+        </p>
+
+        <div class="filter-card">
+            <div class="filter-group">
+                <label for="riskFilter">위험 등급</label>
+                <select id="riskFilter">
+                    <option value="전체">전체</option>
+                    <option value="고위험">고위험</option>
+                    <option value="중위험">중위험</option>
+                    <option value="정상">정상</option>
+                    <option value="저위험">저위험</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="genderFilter">성별</label>
+                <select id="genderFilter">
+                    <option value="전체">전체</option>
+                    <option value="Male">남성</option>
+                    <option value="Female">여성</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>기타</label>
+                <button type="button" class="column-toggle-btn" id="columnToggleBtn">
+                    컬럼 선택
+                </button>
+
+                <div class="column-menu" id="columnMenu">
+                    <div class="column-menu-title">표시할 컬럼 선택</div>
+
+                    <div class="column-menu-actions">
+                        <button type="button" class="small-btn" id="selectAllColumns">전체 선택</button>
+                        <button type="button" class="small-btn" id="clearColumns">기본만 보기</button>
+                    </div>
+
+                    <div id="columnCheckboxList"></div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="probSort">차순</label>
+                <select id="probSort">
+                    <option value="desc">재입원율 내림차순</option>
+                    <option value="asc">재입원율 오름차순</option>
+                    <option value="name_asc">환자명 가나다순</option>
+                    <option value="name_desc">환자명 역순</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-scroll">
+            {{ table_html|safe }}
+        </div>
+
+        <div class="empty-message" id="emptyMessage">
+            조건에 맞는 환자가 없습니다.
+        </div>
+    </div>
+
+    <div class="button-row">
+        <a href="{% url 'prediction:prediction_page' %}" class="back-link">다시 예측하기</a>
+        <a href="{% url 'patients:patient_list' %}" class="patient-link">환자 목록으로 가기</a>
+        {% if first_prediction_id %}
+        <a href="{% url 'analysis:shap_result' first_prediction_id %}" class="shap-link">SHAP 분석 보기</a>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    const fixedColumns = ["성별", "재입원 확률", "위험 등급"];
+
+    const defaultVisibleColumns = [
+        "환자명",
+        "성별",
+        "연령대",
+        "재입원 확률",
+        "위험 등급"
+    ];
+
+    function getColumnIndex(headerName) {
+        const headers = document.querySelectorAll(".result-table thead th");
+
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].innerText.trim() === headerName) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    function getHeaderNames() {
+        const headers = document.querySelectorAll(".result-table thead th");
+        return Array.from(headers).map(header => header.innerText.trim());
+    }
+
+    function normalizeRiskText(text) {
+        const value = text.trim();
+
+        if (value === "저위험") {
+            return "정상";
+        }
+
+        return value;
+    }
+
+    function normalizeGenderText(text) {
+        const value = text.trim();
+
+        if (value === "남성") {
+            return "Male";
+        }
+
+        if (value === "여성") {
+            return "Female";
+        }
+
+        return value;
+    }
+
+    function getProbabilityNumber(text) {
+        const cleaned = text.replace("%", "").trim();
+        const value = parseFloat(cleaned);
+
+        if (isNaN(value)) {
+            return 0;
+        }
+
+        return value;
+    }
+
+    function decorateResultTable() {
+        const table = document.querySelector(".result-table");
+
+        if (!table) {
+            return;
+        }
+
+        const riskIndex = getColumnIndex("위험 등급");
+        const probIndex = getColumnIndex("재입원 확률");
+
+        if (riskIndex === -1 || probIndex === -1) {
+            return;
+        }
+
+        const rows = document.querySelectorAll(".result-table tbody tr");
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+
+            if (!cells[riskIndex] || !cells[probIndex]) {
+                return;
+            }
+
+            const rawRisk = cells[riskIndex].innerText.trim();
+            const normalizedRisk = normalizeRiskText(rawRisk);
+
+            cells[riskIndex].setAttribute("data-risk", normalizedRisk);
+
+            row.classList.remove("row-high", "row-middle", "row-normal");
+
+            if (normalizedRisk === "고위험") {
+                row.classList.add("row-high");
+                cells[riskIndex].innerHTML = '<span class="badge high">고위험</span>';
+            } else if (normalizedRisk === "중위험") {
+                row.classList.add("row-middle");
+                cells[riskIndex].innerHTML = '<span class="badge middle">중위험</span>';
+            } else {
+                row.classList.add("row-normal");
+                cells[riskIndex].innerHTML = '<span class="badge normal">정상</span>';
+            }
+
+            const probNumber = getProbabilityNumber(cells[probIndex].innerText);
+            cells[probIndex].setAttribute("data-probability", probNumber);
+            cells[probIndex].classList.add("probability-cell");
+            cells[probIndex].innerText = probNumber.toFixed(2) + "%";
+        });
+    }
+
+    function createColumnCheckboxes() {
+        const headers = getHeaderNames();
+        const list = document.getElementById("columnCheckboxList");
+
+        list.innerHTML = "";
+
+        const selectableHeaders = headers
+            .filter(headerName => !fixedColumns.includes(headerName))
+            .sort((a, b) => a.localeCompare(b, "ko"));
+
+        selectableHeaders.forEach(headerName => {
+            const isChecked = defaultVisibleColumns.includes(headerName);
+
+            const label = document.createElement("label");
+            label.className = "column-option";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = headerName;
+            checkbox.checked = isChecked;
+            checkbox.className = "column-checkbox";
+
+            checkbox.addEventListener("change", applyColumnVisibility);
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(headerName));
+
+            list.appendChild(label);
+        });
+    }
+
+    function getSelectedColumns() {
+        const checkboxes = document.querySelectorAll(".column-checkbox");
+        const selected = [];
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                selected.push(checkbox.value);
+            }
+        });
+
+        fixedColumns.forEach(column => {
+            if (!selected.includes(column)) {
+                selected.push(column);
+            }
+        });
+
+        return selected;
+    }
+
+    function applyColumnVisibility() {
+        const selectedColumns = getSelectedColumns();
+        const headers = document.querySelectorAll(".result-table thead th");
+        const rows = document.querySelectorAll(".result-table tbody tr");
+
+        headers.forEach((header, index) => {
+            const headerName = header.innerText.trim();
+            const shouldShow = selectedColumns.includes(headerName);
+
+            header.style.display = shouldShow ? "" : "none";
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+
+                if (cells[index]) {
+                    cells[index].style.display = shouldShow ? "" : "none";
+                }
+            });
+        });
+
+        updateColumnButtonText();
+    }
+
+    function updateColumnButtonText() {
+        const selectedColumns = getSelectedColumns();
+        const optionalSelectedCount = selectedColumns.filter(
+            column => !fixedColumns.includes(column)
+        ).length;
+
+        const button = document.getElementById("columnToggleBtn");
+
+        button.innerText = "컬럼 " + optionalSelectedCount + "개 선택";
+    }
+
+    function applyFilters() {
+        const table = document.querySelector(".result-table");
+
+        if (!table) {
+            return;
+        }
+
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        const riskValue = document.getElementById("riskFilter").value;
+        const genderValue = document.getElementById("genderFilter").value;
+        const sortValue = document.getElementById("probSort").value;
+
+        const riskIndex = getColumnIndex("위험 등급");
+        const genderIndex = getColumnIndex("성별");
+        const probIndex = getColumnIndex("재입원 확률");
+        const nameIndex = getColumnIndex("환자명");
+
+        if (riskIndex === -1 || genderIndex === -1 || probIndex === -1) {
+            return;
+        }
+
+        const sortedRows = rows.sort((a, b) => {
+            const aCells = a.querySelectorAll("td");
+            const bCells = b.querySelectorAll("td");
+
+            if (sortValue === "name_asc" && nameIndex !== -1) {
+                const aName = aCells[nameIndex].innerText.trim();
+                const bName = bCells[nameIndex].innerText.trim();
+
+                return aName.localeCompare(bName, "ko");
+            }
+
+            if (sortValue === "name_desc" && nameIndex !== -1) {
+                const aName = aCells[nameIndex].innerText.trim();
+                const bName = bCells[nameIndex].innerText.trim();
+
+                return bName.localeCompare(aName, "ko");
+            }
+
+            const aValue = parseFloat(aCells[probIndex].getAttribute("data-probability")) || 0;
+            const bValue = parseFloat(bCells[probIndex].getAttribute("data-probability")) || 0;
+
+            if (sortValue === "asc") {
+                return aValue - bValue;
+            }
+
+            return bValue - aValue;
+        });
+
+        let visibleCount = 0;
+
+        sortedRows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+
+            const riskText = cells[riskIndex].getAttribute("data-risk") || normalizeRiskText(cells[riskIndex].innerText);
+            const genderText = normalizeGenderText(cells[genderIndex].innerText);
+
+            const riskMatch =
+                riskValue === "전체" ||
+                riskText === riskValue ||
+                (riskValue === "정상" && riskText === "저위험") ||
+                (riskValue === "저위험" && riskText === "정상");
+
+            const genderMatch =
+                genderValue === "전체" ||
+                genderText === genderValue;
+
+            if (riskMatch && genderMatch) {
+                row.style.display = "";
+                visibleCount += 1;
+            } else {
+                row.style.display = "none";
+            }
+
+            tbody.appendChild(row);
+        });
+
+        const emptyMessage = document.getElementById("emptyMessage");
+
+        if (visibleCount === 0) {
+            emptyMessage.style.display = "block";
+        } else {
+            emptyMessage.style.display = "none";
+        }
+
+        applyColumnVisibility();
+    }
+
+    function selectAllColumns() {
+        const checkboxes = document.querySelectorAll(".column-checkbox");
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+
+        applyColumnVisibility();
+    }
+
+    function clearColumns() {
+        const checkboxes = document.querySelectorAll(".column-checkbox");
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = defaultVisibleColumns.includes(checkbox.value);
+        });
+
+        applyColumnVisibility();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        decorateResultTable();
+        createColumnCheckboxes();
+        applyFilters();
+
+        document.getElementById("riskFilter").addEventListener("change", applyFilters);
+        document.getElementById("genderFilter").addEventListener("change", applyFilters);
+        document.getElementById("probSort").addEventListener("change", applyFilters);
+
+        document.getElementById("columnToggleBtn").addEventListener("click", function (event) {
+            event.stopPropagation();
+            document.getElementById("columnMenu").classList.toggle("show");
+        });
+
+        document.getElementById("selectAllColumns").addEventListener("click", selectAllColumns);
+        document.getElementById("clearColumns").addEventListener("click", clearColumns);
+
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("columnMenu");
+            const button = document.getElementById("columnToggleBtn");
+
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                menu.classList.remove("show");
+            }
+        });
+    });
+</script>
+{% endblock %}

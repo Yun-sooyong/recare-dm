@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴원 준비도 — {{ patient.patient_nbr }}</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-main: #D8D1C4;
+  --bg-card: #FFFDF8;
+  --bg-soft: #F2EEE6;
+  --main-color: #1E2530;
+  --point-color: #D9B84F;
+  --safe-color: #8FA99B;
+  --text-main: #1F1F1F;
+  --text-sub: #6F6A61;
+  --text-muted: #8B857B;
+  --border-color: #E4DED3;
+  --border-strong: #D6CCBF;
+  --white: #FFFFFF;
+  --shadow-card: 0 8px 22px rgba(30, 37, 48, 0.06);
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --danger-bg: #FBE7E3;
+  --danger-text: #B64238;
+  --danger-color: #D96B5F;
+  --middle-bg: #F8EBC2;
+  --middle-text: #9A6E00;
+  --normal-bg: #E4ECE7;
+  --normal-text: #4F7766;
+  --c-ok: #4F7766;
+  --c-warn: #9A6E00;
+}
+
+body {
+  font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 34%), var(--bg-main);
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* 브레드크럼 */
+.breadcrumb { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb a { color: var(--text-sub); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-main); }
+.breadcrumb .sep { color: var(--text-muted); }
+.breadcrumb .cur { color: var(--text-main); font-weight: 600; }
+
+/* 환자 헤더 바 */
+.patient-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+}
+.patient-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--bg-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text-sub); flex-shrink: 0;
+}
+.patient-info { flex: 1; }
+.patient-name { font-size: 16px; font-weight: 700; color: var(--main-color); }
+.patient-meta { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.patient-stats { display: flex; align-items: center; gap: 20px; }
+.stat-item { text-align: center; }
+.stat-val { font-size: 20px; font-weight: 800; }
+.stat-val.danger { color: var(--danger-color); }
+.stat-val.ok { color: var(--c-ok); }
+.stat-label { font-size: 11px; color: var(--text-sub); }
+
+.badge-risk { padding: 4px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; }
+.badge-risk.high { background: var(--danger-bg); color: var(--danger-text); }
+.badge-risk.medium { background: var(--middle-bg); color: var(--middle-text); }
+.badge-risk.low { background: var(--normal-bg); color: var(--normal-text); }
+
+/* 메인 그리드 */
+.main-grid { display: grid; grid-template-columns: 360px 1fr; gap: 16px; margin-bottom: 16px; }
+
+/* 카드 */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--text-sub);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 6px;
+}
+.card-title svg { width: 14px; height: 14px; }
+
+/* 점수 게이지 */
+.score-card { text-align: center; }
+.gauge-wrap { position: relative; width: 160px; height: 90px; margin: 0 auto 12px; }
+.gauge-wrap svg { width: 100%; height: 100%; overflow: visible; }
+
+.score-label {
+  display: inline-block; margin-top: 10px; margin-bottom: 16px;
+  padding: 5px 14px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700;
+}
+.score-label.danger { background: var(--danger-bg); color: var(--danger-text); }
+.score-label.warn { background: var(--middle-bg); color: var(--middle-text); }
+.score-label.ok { background: var(--normal-bg); color: var(--normal-text); }
+
+/* 버튼 */
+.btn {
+  display: block; width: 100%; padding: 10px;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; text-align: center; margin-top: 8px;
+  text-decoration: none; transition: 0.18s ease;
+}
+.btn-primary { background: var(--main-color); color: var(--white); box-shadow: 0 4px 12px rgba(30,37,48,0.16); }
+.btn-primary:hover { background: #141A22; transform: translateY(-1px); }
+.btn-outline {
+  background: rgba(217,184,79,0.12); color: var(--main-color);
+  border: 1.5px solid rgba(217,184,79,0.28);
+}
+.btn-outline:hover { background: rgba(217,184,79,0.22); }
+
+/* SHAP TOP3 */
+.shap-list { display: flex; flex-direction: column; gap: 8px; }
+.shap-item { display: flex; align-items: center; gap: 10px; }
+.shap-rank {
+  width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.shap-rank.r1 { background: var(--middle-bg); color: var(--middle-text); }
+.shap-rank.r2 { background: var(--bg-soft); color: var(--main-color); }
+.shap-rank.r3 { background: var(--normal-bg); color: var(--normal-text); }
+.shap-name { font-size: 13px; flex: 1; }
+.shap-bar-wrap { width: 100px; height: 6px; background: var(--border-color); border-radius: 3px; }
+.shap-bar-fill { height: 100%; border-radius: 3px; background: var(--danger-color); }
+.shap-val { font-size: 12px; font-weight: 700; color: var(--danger-color); min-width: 44px; text-align: right; }
+
+/* 항목별 평가 */
+.eval-list { display: flex; flex-direction: column; gap: 10px; }
+.eval-item { padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-soft); }
+.eval-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.eval-icon { font-size: 16px; flex-shrink: 0; }
+.eval-name { font-size: 13px; font-weight: 700; flex: 1; color: var(--main-color); }
+.eval-score-wrap { display: flex; align-items: center; gap: 6px; }
+.eval-status { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+.eval-status.danger { background: var(--danger-bg); color: var(--danger-text); }
+.eval-status.ok { background: var(--normal-bg); color: var(--normal-text); }
+.eval-score { font-size: 13px; font-weight: 700; }
+.eval-score.danger { color: var(--danger-color); }
+.eval-score.ok { color: var(--c-ok); }
+.eval-bar-bg { height: 5px; background: var(--border-color); border-radius: 3px; margin-bottom: 6px; }
+.eval-bar-fill { height: 100%; border-radius: 3px; }
+.eval-desc { font-size: 12px; color: var(--text-sub); }
+
+/* 체크리스트 */
+.checklist-card { margin-bottom: 16px; }
+.checklist-filter { display: flex; gap: 8px; margin-bottom: 14px; }
+.filter-btn {
+  padding: 5px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border-color); background: transparent; cursor: pointer; color: var(--text-sub);
+  transition: all .15s;
+}
+.filter-btn.active.all { background: var(--main-color); color: var(--white); border-color: var(--main-color); }
+.filter-btn.active.required { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-color); }
+.filter-btn.active.recommended { background: var(--middle-bg); color: var(--middle-text); border-color: var(--point-color); }
+
+.cl-group { margin-bottom: 12px; }
+.cl-group-title {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  margin-bottom: 6px; border-left: 3px solid var(--point-color); padding-left: 8px;
+}
+.cl-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-sm); margin-bottom: 4px;
+  cursor: pointer; transition: background .12s;
+}
+.cl-item:hover { background: var(--bg-soft); }
+.cl-item input[type="checkbox"] { width: 15px; height: 15px; border-radius: 4px; cursor: pointer; flex-shrink: 0; accent-color: var(--main-color); }
+.cl-item-text { flex: 1; font-size: 13px; }
+.cl-item.checked .cl-item-text { text-decoration: line-through; color: var(--text-muted); }
+.cl-tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
+.cl-tag.required { background: var(--danger-bg); color: var(--danger-text); }
+.cl-tag.recommended { background: var(--middle-bg); color: var(--middle-text); }
+body.filter-required .cl-item[data-type="recommended"] { display: none; }
+body.filter-recommended .cl-item[data-type="required"] { display: none; }
+
+/* 퇴원일 폼 */
+.date-form { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.date-form label { font-size: 12px; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px; }
+.date-form input[type="date"] {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  font-size: 13px; background: rgba(255,255,255,0.66); color: var(--text-main);
+}
+.date-form input[type="date"]:focus {
+  outline: none; border-color: var(--point-color);
+  box-shadow: 0 0 0 3px rgba(217,184,79,0.20);
+}
+
+/* 개선 권고사항 */
+.recommend-box {
+  padding: 12px; border-radius: var(--radius-sm);
+  background: var(--danger-bg); border: 1px solid rgba(217,107,95,0.28);
+}
+.recommend-box-title { font-size: 12px; font-weight: 700; color: var(--danger-text); margin-bottom: 4px; }
+.recommend-box-desc { font-size: 12px; color: var(--text-sub); }
+
+/* 인쇄 */
+@media print {
+  @page { size: A4; margin: 12mm 14mm; }
+  body { background: #fff; padding: 0; font-size: 11px; color: #000; }
+  .breadcrumb, .btn, .checklist-filter, .date-form { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; padding: 12px; }
+  .patient-bar { padding: 10px 14px; margin-bottom: 10px; }
+  .main-grid { grid-template-columns: 200px 1fr; gap: 10px; margin-bottom: 10px; }
+  .gauge-wrap { width: 120px; height: 68px; }
+  .cl-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .cl-item { padding: 4px 6px; margin-bottom: 2px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 브레드크럼 -->
+<nav class="breadcrumb">
+  <a href="{% url 'patients:patient_list' %}">환자 목록</a>
+  <span class="sep">›</span>
+  <a href="{% url 'patients:patient_detail' patient.pk %}">{{ patient.patient_nbr }}</a>
+  <span class="sep">›</span>
+  <span class="cur">퇴원 준비도</span>
+</nav>
+
+<!-- 환자 헤더 -->
+<div class="patient-bar">
+  <div class="patient-avatar">👤</div>
+  <div class="patient-info">
+    <div class="patient-name">
+      {% comment %} {{ patient.patient_nbr }} {% endcomment %}
+      {{ patient.patient_name|default:'---' }}
+      <span style="font-size:12px;font-weight:400;color:#6b7280;">
+        PT-{{ patient.pk|stringformat:"06d" }} · {{ patient.visit_count }}차 내원
+      </span>
+    </div>
+    <div class="patient-meta">
+      {% if prediction %}
+        {{ prediction.gender }} · {{ prediction.age }} · {{ prediction.race }} · 내원일 {{ prediction.visit_date }}
+      {% else %}
+        예측 데이터 없음
+      {% endif %}
+    </div>
+  </div>
+  {% if readiness %}
+  <div class="patient-stats">
+    <div class="stat-item">
+      <div class="stat-val {% if readiness.total < 60 %}danger{% else %}ok{% endif %}">{{ readiness.total }}</div>
+      <div class="stat-label">준비도</div>
+    </div>
+    {% if prediction.readmit_proba %}
+    <div class="stat-item">
+      <div class="stat-val danger">{{ prediction.readmit_proba|floatformat:0 }}%</div>
+      <div class="stat-label">재입원 위험도</div>
+    </div>
+    {% endif %}
+    {% if prediction.risk_level %}
+    <span class="badge-risk {% if prediction.risk_level == '고위험' %}high{% elif prediction.risk_level == '중위험' %}medium{% else %}low{% endif %}">
+      {{ prediction.risk_level }}
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+
+{% if readiness %}
+<!-- 상단 2열 -->
+<div class="main-grid">
+
+  <!-- 좌: 점수 카드 -->
+  <div class="card score-card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+      퇴원 준비도 점수
+    </div>
+    <!-- 반원 게이지 -->
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10,90 A70,70 0 0,1 150,90" fill="none" stroke="#e5e7eb" stroke-width="12" stroke-linecap="round"/>
+        <path d="M10,90 A70,70 0 0,1 150,90" fill="none"
+              stroke="{% if readiness.total < 60 %}#e8420a{% elif readiness.total < 80 %}#d97706{% else %}#059669{% endif %}"
+              stroke-width="12" stroke-linecap="round"
+              stroke-dasharray="{{ readiness.gauge_fill }} 220" stroke-dashoffset="0"/>
+        <text x="80" y="78" text-anchor="middle" font-size="28" font-weight="800"
+              fill="{% if readiness.total < 60 %}#e8420a{% elif readiness.total < 80 %}#d97706{% else %}#059669{% endif %}">{{ readiness.total }}</text>
+        <text x="80" y="90" text-anchor="middle" font-size="11" fill="#9ca3af">/100점</text>
+      </svg>
+    </div>
+    <div class="score-label {% if readiness.total < 60 %}danger{% elif readiness.total < 80 %}warn{% else %}ok{% endif %}">{{ readiness.label }}</div>
+
+    <a href="{% url 'discharge:discharge_print' patient_id=patient.pk %}" class="btn btn-primary">🖨 퇴원 안내서 출력</a>
+    <a href="{% url 'discharge:discharge_revisit' patient_id=patient.pk %}" class="btn btn-outline">🔄 재방문 등록</a>
+
+    <!-- 퇴원일 저장 폼 -->
+    <form method="post" class="date-form">
+      {% csrf_token %}
+      <label for="id_discharge_date">퇴원 예정일</label>
+      {{ form.discharge_date }}
+      <input type="hidden" name="discharge_score" value="{{ readiness.total }}">
+      <button type="submit" class="btn btn-primary" style="margin-top:8px;">
+        {% if record %}수정 저장{% else %}저장{% endif %}
+      </button>
+    </form>
+
+    <!-- 주요 위험 요인 (SHAP TOP 3) -->
+    {% if readiness.risk_factors %}
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--c-border);">
+      <div class="card-title" style="margin-bottom:12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        주요 위험 요인 (TOP {{ readiness.risk_factors|length }})
+      </div>
+      <div class="shap-list">
+        {% for rf in readiness.risk_factors %}
+        <div class="shap-item">
+          <span class="shap-rank r{{ forloop.counter }}">{{ forloop.counter }}</span>
+          <span class="shap-name">{{ rf.name }}</span>
+          <div class="shap-bar-wrap"><div class="shap-bar-fill" style="width:{{ rf.bar_pct }}%;"></div></div>
+          <span class="shap-val">+{{ rf.impact }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 우: 5영역 평가 -->
+  <div>
+    <div class="card" style="height:100%;">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        항목별 평가
+      </div>
+      <div class="eval-list">
+        {% for item in readiness.items %}
+        <div class="eval-item">
+          <div class="eval-item-header">
+            <span class="eval-icon">{{ item.icon }}</span>
+            <span class="eval-name">{{ item.name }}</span>
+            <div class="eval-score-wrap">
+              <span class="eval-status {% if item.score < 14 %}danger{% else %}ok{% endif %}">{% if item.score < 14 %}위험{% else %}양호{% endif %}</span>
+              <span class="eval-score {% if item.score < 14 %}danger{% else %}ok{% endif %}">{{ item.score }}/20</span>
+            </div>
+          </div>
+          <div class="eval-bar-bg"><div class="eval-bar-fill" style="width:{% widthratio item.score 20 100 %}%;background:{% if item.score < 14 %}#e8420a{% else %}#059669{% endif %};"></div></div>
+          <div class="eval-desc">{{ item.desc }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 체크리스트 -->
+<div class="card checklist-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div class="card-title" style="margin-bottom:0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      퇴원 후 행동 지침 체크리스트
+    </div>
+    <div class="checklist-filter">
+      <button class="filter-btn active all" onclick="setFilter('all',this)">전체</button>
+      <button class="filter-btn required" onclick="setFilter('required',this)">필수만</button>
+      <button class="filter-btn recommended" onclick="setFilter('recommended',this)">권장만</button>
+    </div>
+  </div>
+
+  <div class="cl-columns">
+    <!-- 왼쪽 열 -->
+    <div>
+      <div class="cl-group">
+        <div class="cl-group-title">외래 연계</div>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">퇴원 후 7일 이내 외래 방문 예약 확인</span><span class="cl-tag required">필수</span>
+        </label>
+      </div>
+      <div class="cl-group">
+        <div class="cl-group-title">기본 안내</div>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">처방전 및 복용 약물 목록 수령 확인</span><span class="cl-tag required">필수</span>
+        </label>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">식이요법 및 운동 지침 수령</span><span class="cl-tag recommended">권장</span>
+        </label>
+      </div>
+      <div class="cl-group">
+        <div class="cl-group-title">약물 관리</div>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">인슐린 시간 주사 방법 및 혈당 측정 교육</span><span class="cl-tag required">필수</span>
+        </label>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">인슐린 보관 방법 및 주사 부위 교육</span><span class="cl-tag recommended">권장</span>
+        </label>
+      </div>
+    </div>
+    <!-- 오른쪽 열 -->
+    <div>
+      <div class="cl-group">
+        <div class="cl-group-title">응급 대처</div>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">저혈당·고혈당 응급 증상 인지 및 대처 교육</span><span class="cl-tag required">필수</span>
+        </label>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">응급 연락처 카드 제공</span><span class="cl-tag recommended">권장</span>
+        </label>
+      </div>
+      <div class="cl-group">
+        <div class="cl-group-title">추적 관찰</div>
+        <label class="cl-item" data-type="required">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">이전 입원 원인 재발 예방 계획 안내</span><span class="cl-tag required">필수</span>
+        </label>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">퇴원 후 1주일 이내 전화 상담 예약</span><span class="cl-tag recommended">권장</span>
+        </label>
+      </div>
+      <div class="cl-group">
+        <div class="cl-group-title">지역 연계</div>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">지역사회 당뇨 관리 프로그램 안내</span><span class="cl-tag recommended">권장</span>
+        </label>
+        <label class="cl-item" data-type="recommended">
+          <input type="checkbox" onchange="this.parentElement.classList.toggle('checked',this.checked)"><span class="cl-item-text">가족 교육 자료 제공</span><span class="cl-tag recommended">권장</span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 개선 권고사항 -->
+{% if readiness.risk_factors %}
+<div class="card">
+  <div class="card-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    개선 권고사항
+  </div>
+  <div style="display:grid;grid-template-columns:repeat({{ readiness.risk_factors|length }},1fr);gap:10px;">
+    {% for rf in readiness.risk_factors %}
+    <div style="padding:12px;border-radius:8px;background:var(--c-danger-bg);border:1px solid var(--c-danger-border);">
+      <div style="font-size:12px;font-weight:700;color:var(--c-danger);margin-bottom:4px;">{{ rf.icon }} {{ rf.name }}</div>
+      <div style="font-size:12px;color:var(--c-sub);">{{ rf.desc }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+<!-- 예측 데이터 없음 -->
+<div class="card" style="text-align:center;padding:48px;">
+  <p style="font-size:16px;color:var(--c-sub);margin-bottom:16px;">예측 데이터가 없어 퇴원 준비도를 계산할 수 없습니다.</p>
+  <a href="{% url 'discharge_revisit' patient_id=patient.pk %}" class="btn btn-primary" style="max-width:240px;margin:0 auto;">재방문 등록으로 예측 실행</a>
+</div>
+{% endif %}
+
+<script>
+function setFilter(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.body.className = document.body.className.replace(/filter-\S+/g, '').trim();
+  if (type !== 'all') document.body.classList.add('filter-' + type);
+}
+</script>
+</body>
+</html>

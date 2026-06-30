@@ -1,0 +1,650 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ReCare DM{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #D8D1C4;
+      color: #111827;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 252px;
+      height: 100vh;
+      padding: 26px 18px;
+      background: #fffdf8;
+      border-right: 1px solid #d8cbb8;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 8px 18px;
+      color: #1E2530;
+      text-decoration: none;
+    }
+
+    .sidebar-logo:hover {
+      opacity: 0.9;
+    }
+
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: #F2EEE6;
+      border: 1px solid #E2D8C8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .logo-mark img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .sidebar-logo strong {
+      display: block;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.1;
+      color: #1E2530;
+    }
+
+    .sidebar-logo small {
+      display: block;
+      margin-top: 4px;
+      color: #7A6F60;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: #E5DCCC;
+      margin: 2px 0 18px;
+    }
+
+    .sidebar-section-title {
+      color: #8A8070;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      padding: 0 10px;
+      margin-bottom: 9px;
+    }
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-link {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-radius: 12px;
+      color: #2A3342;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 850;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-link:hover {
+      background: #F2EEE6;
+      border-color: #E2D8C8;
+    }
+
+    .sidebar-link.active {
+      background: #1E2530;
+      color: #FFFDF8;
+      box-shadow: 0 8px 18px rgba(30, 37, 48, 0.18);
+    }
+
+    .sidebar-icon {
+      width: 31px;
+      height: 31px;
+      border-radius: 10px;
+      background: #F2EEE6;
+      border: 1px solid #E0D6C7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-icon svg {
+      width: 20px;
+      height: 20px;
+      color: #1E2530;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sidebar-link.active .sidebar-icon {
+      background: #FFFDF8;
+      border-color: #FFFDF8;
+    }
+
+    .sidebar-link.active .sidebar-icon svg {
+      color: #1E2530;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #E5DCCC;
+    }
+
+    .todo-box {
+      padding: 14px 13px;
+      border-radius: 14px;
+      background: #F7F3EA;
+      border: 1px solid #E2D8C8;
+    }
+
+    .todo-title {
+      color: #1E2530;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .todo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .todo-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+      min-height: 18px;
+    }
+
+    .todo-list li span:last-child {
+      display: block;
+      flex: 1;
+      word-break: keep-all;
+    }
+
+    /* 핵심: button 기본 스타일 완전 제거 */
+    .todo-check {
+      appearance: none;
+      -webkit-appearance: none;
+
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      max-width: 14px;
+      min-height: 14px;
+      max-height: 14px;
+
+      margin: 0;
+      padding: 0;
+      border-radius: 4px;
+      border: 1.5px solid #B8AFA0;
+      background: #FFFDF8;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      cursor: pointer;
+      position: relative;
+      line-height: 1;
+      font-size: 0;
+      box-shadow: none;
+    }
+
+    .todo-check:hover {
+      border-color: #1E2530;
+      background: #F2EEE6;
+    }
+
+    .todo-check:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(217, 184, 79, 0.25);
+    }
+
+    .todo-list li.done .todo-check {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    .todo-list li.done .todo-check::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 4px;
+      height: 8px;
+      border: solid #FFFDF8;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .todo-list li.done span:last-child {
+      color: #8A8070;
+      text-decoration: line-through;
+      opacity: 0.72;
+    }
+
+    .todo-list li.priority:not(.done) .todo-check {
+      border-color: #DC2626;
+    }
+
+    .todo-meta {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #E2D8C8;
+      color: #6B6256;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .calendar-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .calendar-month {
+      font-size: 17px;
+      font-weight: 900;
+      color: #1E2530;
+      line-height: 1;
+    }
+
+    .calendar-year {
+      font-size: 12px;
+      font-weight: 900;
+      color: #7A6F60;
+    }
+
+    .calendar-week {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .calendar-week span {
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8A8070;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendar-day {
+      height: 24px;
+      border-radius: 8px;
+      border: 1px solid #D6CCBC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #4B5563;
+      background: #FFFDF8;
+    }
+
+    .calendar-day.blank {
+      visibility: hidden;
+    }
+
+    .calendar-day.today {
+      background: #1E2530;
+      color: #FFFDF8;
+      border-color: #1E2530;
+    }
+
+    .main {
+      margin-left: 252px;
+      padding: 2rem;
+      width: calc(100% - 252px);
+      min-height: 100vh;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 86px;
+        padding: 18px 10px;
+      }
+
+      .sidebar-logo {
+        justify-content: center;
+        padding: 4px 0 16px;
+      }
+
+      .sidebar-logo span:last-child,
+      .sidebar-link span:last-child,
+      .sidebar-section-title,
+      .sidebar-bottom {
+        display: none;
+      }
+
+      .sidebar-link {
+        justify-content: center;
+        padding: 0;
+      }
+
+      .main {
+        margin-left: 86px;
+        width: calc(100% - 86px);
+        padding: 1.2rem;
+      }
+    }
+  </style>
+
+  {% block extra_style %}{% endblock %}
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <nav class="sidebar">
+      <a href="/" class="sidebar-logo">
+        <span class="logo-mark">
+          <img src="{% static 'images/diabetes-care-logo.PNG' %}" alt="ReCare DM 로고">
+        </span>
+        <span>
+          <strong>ReCare DM</strong>
+          <small>Readmission Care</small>
+        </span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section-title">MENU</div>
+
+      <div class="sidebar-menu">
+        <a href="{% url 'dashboard:home' %}"
+           class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+          <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 19V5"/>
+              <path d="M4 19h16"/>
+              <path d="M8 16V9"/>
+              <path d="M12 16V5"/>
+              <path d="M16 16v-4"/>
+            </svg>
+          </span>
+          <span>대시보드</span>
+        </a>
+
+        <a href="{% url 'patients:patient_list' %}"
+           class="sidebar-link {% if request.resolver_match.app_name == 'patients' %}active{% endif %}">
+          <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
+              <circle cx="9.5" cy="7" r="4"/>
+              <path d="M20 8v6"/>
+              <path d="M17 11h6"/>
+            </svg>
+          </span>
+          <span>환자 목록</span>
+        </a>
+
+        <a href="{% url 'prediction:prediction_page' %}"
+           class="sidebar-link {% if request.resolver_match.app_name == 'prediction' %}active{% endif %}">
+          <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v4"/>
+              <path d="M12 18v4"/>
+              <path d="M2 12h4"/>
+              <path d="M18 12h4"/>
+            </svg>
+          </span>
+          <span>위험 예측</span>
+        </a>
+
+        <a href="{% url 'patients:patient_list' %}"
+           class="sidebar-link">
+          <span class="sidebar-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              <path d="M8 7h5"/>
+              <path d="M8 17h8"/>
+            </svg>
+          </span>
+          <span>퇴원 안내</span>
+        </a>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="todo-box">
+          <div class="todo-title">To Do List</div>
+
+          <ul class="todo-list" id="todoList">
+            <li class="priority" data-todo-id="high-risk">
+              <button type="button" class="todo-check" aria-label="고위험 환자 우선 확인 체크"></button>
+              <span>고위험 환자 우선 확인</span>
+            </li>
+
+            <li data-todo-id="recent-prediction">
+              <button type="button" class="todo-check" aria-label="최근 예측 결과 검토 체크"></button>
+              <span>최근 예측 결과 검토</span>
+            </li>
+
+            <li data-todo-id="discharge-target">
+              <button type="button" class="todo-check" aria-label="퇴원 안내 대상 확인 체크"></button>
+              <span>퇴원 안내 대상 확인</span>
+            </li>
+
+            <li data-todo-id="csv-upload">
+              <button type="button" class="todo-check" aria-label="신규 CSV 업로드 확인 체크"></button>
+              <span>신규 CSV 업로드 확인</span>
+            </li>
+
+            <li data-todo-id="risk-factor-note">
+              <button type="button" class="todo-check" aria-label="재입원 위험 요인 기록 체크"></button>
+              <span>재입원 위험 요인 기록</span>
+            </li>
+          </ul>
+
+          <div class="todo-meta">
+            예측 결과는 진료 판단 보조용으로 사용합니다.
+          </div>
+        </div>
+
+        <div class="calendar-box">
+          <div class="calendar-head">
+            <div>
+              <div class="calendar-title">오늘의 일정</div>
+              <div class="calendar-month" id="calendarMonth">Month</div>
+            </div>
+            <div class="calendar-year" id="calendarYear">Year</div>
+          </div>
+
+          <div class="calendar-week">
+            <span>SUN</span>
+            <span>MON</span>
+            <span>TUE</span>
+            <span>WED</span>
+            <span>THU</span>
+            <span>FRI</span>
+            <span>SAT</span>
+          </div>
+
+          <div class="calendar-days" id="calendarDays"></div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main">
+      {% block content %}
+      {% endblock %}
+    </main>
+
+  </div>
+
+  <script>
+    (function () {
+      const monthEl = document.getElementById("calendarMonth");
+      const yearEl = document.getElementById("calendarYear");
+      const daysEl = document.getElementById("calendarDays");
+
+      if (!monthEl || !yearEl || !daysEl) {
+        return;
+      }
+
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const date = today.getDate();
+
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+
+      monthEl.textContent = monthNames[month];
+      yearEl.textContent = year;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
+      daysEl.innerHTML = "";
+
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement("span");
+        blank.className = "calendar-day blank";
+        daysEl.appendChild(blank);
+      }
+
+      for (let day = 1; day <= lastDate; day++) {
+        const dayEl = document.createElement("span");
+        dayEl.className = "calendar-day";
+        dayEl.textContent = day;
+
+        if (day === date) {
+          dayEl.classList.add("today");
+        }
+
+        daysEl.appendChild(dayEl);
+      }
+    })();
+  </script>
+
+  <script>
+  (function () {
+    const todoList = document.getElementById("todoList");
+
+    if (!todoList) {
+      return;
+    }
+
+    const storageKey = "recare_dm_todo_state";
+
+    function loadTodoState() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveTodoState(state) {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    const todoState = loadTodoState();
+    const todoItems = todoList.querySelectorAll("li[data-todo-id]");
+
+    todoItems.forEach(function (item) {
+      const todoId = item.dataset.todoId;
+      const checkButton = item.querySelector(".todo-check");
+
+      if (todoState[todoId]) {
+        item.classList.add("done");
+      } else {
+        item.classList.remove("done");
+      }
+
+      checkButton.addEventListener("click", function () {
+        item.classList.toggle("done");
+
+        todoState[todoId] = item.classList.contains("done");
+        saveTodoState(todoState);
+      });
+    });
+  })();
+</script>
+
+  {% block extra_script %}{% endblock %}
+</body>
+</html>
