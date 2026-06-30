@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}환자 관리{% endblock %}
+  {% comment %} <!-- 페이지 고유 -->
+  <main class="page-body">
+    <div class="content-card">
+      <div class="toolbar">
+        <form class="search-bar" method="get" action="{% url 'patients:patient_list' %}">
+          <input class="form-input" type="text" name="q" value="{{ q }}"
+                 placeholder="환자코드, 이름으로 검색">
+          <button class="btn btn-purple" type="submit">검색</button>
+          {% if q %}<a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">초기화</a>{% endif %}
+        </form>
+        <a class="btn btn-purple" href="{% url 'prediction:prediction_page' %}">+ 환자 추가</a>
+      </div> {% endcomment %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'css/patients.css' %}">
+<style>
+  .patient-page-header {
+    margin-bottom: 22px;
+  }
+
+  .patient-page-header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: #1E2530;
+    margin-bottom: 6px;
+  }
+
+  .patient-page-header .subtitle {
+    color: #64748B;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .page-body {
+    width: 100%;
+  }
+
+  .content-card {
+    background: #FFFDF8;
+    border-radius: 12px;
+    padding: 22px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .total-count {
+    margin-bottom: 14px;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .patient-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .patient-table th {
+    padding: 10px 12px;
+    background: #F8FAFC;
+    color: #64748B;
+    font-size: 12px;
+    text-align: left;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .patient-table td {
+    padding: 12px;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 13px;
+  }
+
+  .patient-table tr:hover td {
+    background: #F8FAFF;
+  }
+
+  .empty-state {
+    padding: 28px;
+    text-align: center;
+    color: #94A3B8;
+    font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="patient-page-header">
+  <h1>환자 관리</h1>
+  <div class="subtitle">등록 환자 목록 · 내원 이력 기반</div>
+</div>
+
+<main class="page-body">
+  <div class="content-card">
+    <div class="toolbar">
+      <form class="search-bar" method="get" action="{% url 'patients:patient_list' %}">
+        <input class="form-input" type="text" name="q" value="{{ q }}" placeholder="환자코드, 이름으로 검색">
+        <button class="btn btn-purple" type="submit">검색</button>
+
+        {% if q %}
+          <a class="btn btn-ghost" href="{% url 'patients:patient_list' %}">초기화</a>
+        {% endif %}
+      </form>
+
+      <a class="btn btn-purple" href="{% url 'prediction:prediction_page' %}">+ 환자 추가</a>
+    </div>
+
+    <div class="total-count">
+      전체 {{ total }}명{% if q %} · "{{ q }}" 검색 결과{% endif %}
+    </div>
+
+    <table class="patient-table">
+      <thead>
+        <tr>
+          <th>환자코드</th>
+          <th>성명</th>
+          <th>나이</th>
+          <th>성별</th>
+          <th>내원 횟수</th>
+          <th>최근 내원일</th>
+          <th>위험도</th>
+          <th>액션</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for p in page_obj %}
+          <tr>
+            <td>
+              <a class="patient-code" href="{% url 'patients:patient_detail' p.pk %}">
+                {{ p.patient_nbr }}
+              </a>
+            </td>
+            <td>{{ p.patient_name|default:"-" }}</td>
+            <td>{{ p.latest_age|default:"–" }}</td>
+            <td>{{ p.latest_gender|default:"–" }}</td>
+            <td><span class="visit-badge">{{ p.n_visits }}회</span></td>
+            <td>{{ p.last_visit|date:"Y-m-d"|default:"–" }}</td>
+            <td>
+              <span class="risk-{% if p.risk_level == '고위험' %}high{% elif p.risk_level == '중위험' %}medium{% else %}low{% endif %}">
+                {{ p.risk_level }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-ghost btn-sm" href="{% url 'patients:patient_detail' p.pk %}">상세</a>
+                <a class="btn btn-ghost btn-sm" href="{% url 'patients:patient_update' p.pk %}">수정</a>
+                <a class="btn btn-danger btn-sm" href="{% url 'patients:patient_delete' p.pk %}">삭제</a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">표시할 환자가 없습니다.</div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="pagination-bar">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹</a>
+        {% else %}
+          <span class="disabled">‹</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if num == page_obj.number %}
+            <span class="current">{{ num }}</span>
+          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+            <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">›</a>
+        {% else %}
+          <span class="disabled">›</span>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
