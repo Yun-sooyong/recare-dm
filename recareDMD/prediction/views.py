@@ -478,8 +478,8 @@ def download_sample_csv(request):
     
     sample_rows = [
         [
-            '곽춘봉', 'Caucasian', 'Male', '[60-70)', 1,
-            7, 45, 1, 20, 2, 0, 1,
+            '김민수', 'Caucasian', 'Male', '[30-40)', 1,
+            4, 40, 1, 13, 0, 0, 5,
             'Circulatory', 'Diabetes', 'Other', 6,
             'None', 'None',
             'No', 'No', 'No', 'No',
@@ -490,8 +490,8 @@ def download_sample_csv(request):
             'No', 'Ch', 'Yes', 0
         ],
         [
-            '김미자', 'Asian', 'Female', '[70-80)', 6,
-            4, 32, 0, 15, 0, 1, 2,
+            '정유진', 'Asian', 'Female', '[50-60)', 1,
+            9, 62, 2, 26, 0, 1, 3,
             'Diabetes', 'Circulatory', 'Respiratory', 8,
             'None', '>8',
             'Steady', 'No', 'No', 'No',
@@ -544,6 +544,7 @@ def download_sample_pdf(request):
         "Circulatory, Diabetes, Other, 6, None, None, No, Steady, Ch, Yes",
         "",
         "Note:",
+        "Each row is registered as a new patient with an auto-assigned number.",
         "readmit_30d can exist in the CSV, but it will be excluded from prediction input."
     ]
 
