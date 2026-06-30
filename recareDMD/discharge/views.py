@@ -136,7 +136,7 @@ def discharge_guide(request, patient_id):
             if readiness:
                 saved.discharge_score = readiness['total']
             saved.save()
-            return redirect('discharge_guide', patient_id=patient.pk)
+            return redirect('discharge:discharge_guide', patient_id=patient.pk)
     else:
         form = DischargeRecordForm(instance=record)
 
