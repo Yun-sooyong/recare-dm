@@ -286,7 +286,7 @@ def download_sample_csv(request):
     writer = csv.writer(response)
 
     columns = [
-        'patient_nbr', 'name', 'race', 'gender', 'age', 'discharge_disposition_id',
+        'name', 'race', 'gender', 'age', 'discharge_disposition_id',
         'time_in_hospital', 'num_lab_procedures', 'num_procedures',
         'num_medications', 'number_outpatient', 'number_emergency',
         'number_inpatient', 'diag_1', 'diag_2', 'diag_3',
@@ -302,7 +302,7 @@ def download_sample_csv(request):
 
     sample_rows = [
         [
-            10001, '김민수', 'Caucasian', 'Male', '[30-40)', 1,
+            '김민수', 'Caucasian', 'Male', '[30-40)', 1,
             4, 40, 1, 13, 0, 0, 5,
             'Circulatory', 'Diabetes', 'Other', 6,
             'None', 'None',
@@ -314,7 +314,7 @@ def download_sample_csv(request):
             'No', 'Ch', 'Yes', 0
         ],
         [
-            10002, '정유진', 'Asian', 'Female', '[50-60)', 1,
+            '정유진', 'Asian', 'Female', '[50-60)', 1,
             9, 62, 2, 26, 0, 1, 3,
             'Diabetes', 'Circulatory', 'Respiratory', 8,
             'None', '>8',
@@ -354,14 +354,14 @@ def download_sample_pdf(request):
     p.setFont("Helvetica", 10)
     lines = [
         "Required CSV columns:",
-        "patient_nbr, name, race, gender, age, discharge_disposition_id,",
+        "name, race, gender, age, discharge_disposition_id,",
         "time_in_hospital, num_lab_procedures, num_procedures, num_medications,",
         "number_outpatient, number_emergency, number_inpatient,",
         "diag_1, diag_2, diag_3, number_diagnoses,",
         "max_glu_serum, A1Cresult, metformin, insulin, change, diabetesMed",
         "",
         "Note:",
-        "patient_nbr is used to connect prediction results to existing patients.",
+        "Each row is registered as a new patient with an auto-assigned number.",
         "readmit_30d can exist in the CSV, but it will be excluded from prediction input."
     ]
 
