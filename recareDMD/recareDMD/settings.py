@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,11 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-REMOVED-dev-key"
+# 기본값은 꺼짐. 로컬 개발 때만 DEBUG=True로 켠다.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# SECRET_KEY는 환경 변수에서 읽는다. 코드에 키를 적지 않는다.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        # 개발 전용 키. 운영에서는 쓰지 않는다.
+        SECRET_KEY = 'django-insecure-dev-only-change-me'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY 환경 변수를 설정해야 한다.')
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
