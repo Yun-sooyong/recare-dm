@@ -1,7 +1,7 @@
 # ReCare-DM — 당뇨 환자 재입원 위험 관리 대시보드
 
 > 팀 프로젝트의 사본입니다. 원본은 `Yun-sooyong/ReCare-DM-Dashboard`(비공개)입니다.
-> 커밋 기록과 작성자는 원본과 같습니다. 원본 기록에서 개발용 키 값을 지웠고, 서버가 켜지지 않던 문제를 고쳤습니다.
+> 커밋의 내용과 순서는 원본과 같습니다. 커밋 작성자 메일만 GitHub noreply 주소로 바꿨습니다. 원본 기록에서 개발용 키 값을 지웠고, 서버가 켜지지 않던 문제를 고쳤습니다.
 
 당뇨 환자의 재입원 위험을 예측하고, 퇴원 준비 상태를 점수로 보여 주는 의료진용 웹 대시보드입니다.
 예측 결과마다 위험을 높이는 요인과 낮추는 요인을 SHAP으로 함께 보여 줍니다.
@@ -77,7 +77,7 @@ flowchart LR
 
 ## 실행
 
-1. 저장소를 받습니다: `git clone https://github.com/Yun-sooyong/ReCare-DM-Dashboard.git`
+1. 저장소를 받습니다: `git clone https://github.com/Yun-sooyong/recare-dm.git && cd recare-dm`
 2. 가상 환경을 만들고 패키지를 설치합니다: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 3. DB를 만듭니다: `cd recareDMD && DEBUG=True python manage.py migrate`
 4. 서버를 실행합니다: `DEBUG=True python manage.py runserver`
